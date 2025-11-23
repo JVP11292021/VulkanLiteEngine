@@ -23,7 +23,7 @@ public:
 	~ShaderModel();
 
 	ShaderModel(const ShaderModel&) = delete;
-	void operator=(const ShaderModel&) = delete;
+	ShaderModel& operator=(const ShaderModel&) = delete;
 
 public:
 	void bind(VkCommandBuffer commandBuffer);

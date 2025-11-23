@@ -29,7 +29,7 @@ public:
 	~Pipeline();
 
 	Pipeline(const Pipeline&) = delete;
-	void operator=(const Pipeline&) = delete;
+	Pipeline& operator=(const Pipeline&) = delete;
 
 	void bind(VkCommandBuffer commandBuffer);
 	static PipelineConfInfo defaultPipelineConfigInfo(std::uint32_t w, std::uint32_t h);
