@@ -1,6 +1,6 @@
-workspace "Engine"
+workspace "VleEngine"
 	architecture "x64"
-	startproject "Engine"
+	startproject "SandboxApp"
 
 	configurations {
 		"Debug",
@@ -19,7 +19,7 @@ end
 
 project "Engine"
 	location "Engine"
-	kind "ConsoleApp"
+	kind "staticlib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
@@ -84,5 +84,71 @@ project "Engine"
 
 	filter "configurations:Dist"
 		defines "VLE_DIST"
+		optimize "on"
+		runtime "Release"
+
+project "SandboxApp"
+	location "SandboxApp"
+	kind "ConsoleApp"
+	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files {
+		"%{prj.name}/**.h",
+		"%{prj.name}/**.hpp",
+		"%{prj.name}/**.inl",
+		"%{prj.name}/**.cpp",
+	}
+
+	includedirs {
+		"Libraries/include",
+		"Engine",
+	}
+
+	libdirs {
+		"Libraries/lib",
+	}
+
+	links {
+		"Engine",
+	}
+
+	if vulkan_sdk ~= nil then
+        includedirs {
+            vulkan_sdk .. "/Include"
+        }
+
+        libdirs {
+            vulkan_sdk .. "/Lib"
+        }
+
+        links {
+            "vulkan-1.lib"
+        }
+
+        defines {
+            "USE_VULKAN"
+        }
+    end
+
+	filter "system:windows"
+		systemversion "latest"
+
+	filter "configurations:Debug"
+		defines "APP_VLE_DEBUG"
+		symbols "on"
+		runtime "Debug"
+
+	filter "configurations:Release"
+		defines "APP_VLE_RELEASE"
+		optimize "on"
+		runtime "Release"
+
+	filter "configurations:Dist"
+		defines "APP_VLE_DIST"
 		optimize "on"
 		runtime "Release"

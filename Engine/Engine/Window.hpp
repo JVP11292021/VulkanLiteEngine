@@ -18,19 +18,25 @@ public:
 	EngineWindow(const EngineWindow&) = delete;
 	EngineWindow& operator=(const EngineWindow&) = delete;
 
+public:
 	inline bool shouldClose() { return glfwWindowShouldClose(this->_win); }
 	inline VkExtent2D getExtent() const { return { static_cast<std::uint32_t>(this->_width), static_cast<std::uint32_t>(this->_height) }; }
+	inline bool wasWindowResized() const { return this->_frameBufferResized; }
+	inline void resetWindowResized() { this->_frameBufferResized = false; }
 
+public:
 	void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
 private:
+	static void frameBufferResizedCb(GLFWwindow* window, std::int32_t width, std::int32_t height);
 	void init();
 
 private:
 	GLFWwindow* _win;
 
-	const std::int32_t _width;
-	const std::int32_t _height;
+	std::int32_t _width;
+	std::int32_t _height;
+	bool _frameBufferResized;
 	std::string _title;
 };
 

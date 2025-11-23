@@ -9,7 +9,7 @@
 
 VLE_NS_B
 
-struct PipelineConfInfo {
+struct PipelineConfigInfo {
 	VkViewport viewport;
 	VkRect2D scissor;
 	VkPipelineInputAssemblyStateCreateInfo assemblyInputInfo;
@@ -25,20 +25,20 @@ struct PipelineConfInfo {
 
 class Pipeline {
 public:
-	explicit Pipeline(EngineDevice& device, const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfInfo& configInfo);
+	explicit Pipeline(EngineDevice& device, const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo);
 	~Pipeline();
 
 	Pipeline(const Pipeline&) = delete;
 	Pipeline& operator=(const Pipeline&) = delete;
 
 	void bind(VkCommandBuffer commandBuffer);
-	static PipelineConfInfo defaultPipelineConfigInfo(std::uint32_t w, std::uint32_t h);
+	static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo, std::uint32_t w, std::uint32_t h);
 
 
 private:
 	static std::vector<char> readFile(const std::string& path);
 
-	void createGfxPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfInfo& configInfo);
+	void createGfxPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo);
 	void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);
 
 private: 

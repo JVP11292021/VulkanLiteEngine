@@ -13,12 +13,26 @@ VLE_NS_B
 EngineSwapChain::EngineSwapChain(EngineDevice &deviceRef, VkExtent2D extent)
     : device{deviceRef}, windowExtent{extent} 
 {
-  createSwapChain();
-  createImageViews();
-  createRenderPass();
-  createDepthResources();
-  createFramebuffers();
-  createSyncObjects();
+    this->init();
+}
+
+
+EngineSwapChain::EngineSwapChain(
+    EngineDevice& deviceRef, VkExtent2D extent, std::shared_ptr<EngineSwapChain> previous
+)
+    : device{ deviceRef }, windowExtent{ extent }, oldSwapChain{ previous } 
+{
+    this->init();
+    oldSwapChain = nullptr;
+}
+
+void EngineSwapChain::init() {
+    this->createSwapChain();
+    this->createImageViews();
+    this->createRenderPass();
+    this->createDepthResources();
+    this->createFramebuffers();
+    this->createSyncObjects();
 }
 
 EngineSwapChain::~EngineSwapChain() {
@@ -134,6 +148,10 @@ void EngineSwapChain::createSwapChain() {
     imageCount = swapChainSupport.capabilities.maxImageCount;
   }
 
+  if (swapChainSupport.formats.empty()) {
+      throw std::runtime_error("No surface formats available; surface not supported by physical device.");
+  }
+
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   createInfo.surface = device.surface();
@@ -164,10 +182,10 @@ void EngineSwapChain::createSwapChain() {
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
 
-  createInfo.oldSwapchain = VK_NULL_HANDLE;
+  createInfo.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain;
 
-  if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create swap chain!");
+  if (auto res = vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain); res != VK_SUCCESS) {
+    throw std::runtime_error("failed to create swap chain, error code: " + std::to_string(res));
   }
 
   // we only specified a minimum number of images in the swap chain, so the implementation is
@@ -362,15 +380,23 @@ void EngineSwapChain::createSyncObjects() {
 }
 
 VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(
-    const std::vector<VkSurfaceFormatKHR> &availableFormats) {
-  for (const auto &availableFormat : availableFormats) {
-    if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
-        availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-      return availableFormat;
+    const std::vector<VkSurfaceFormatKHR> &availableFormats
+) {
+    for (const auto& f : availableFormats) {
+        if (f.format == VK_FORMAT_B8G8R8A8_UNORM &&
+            f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            return f;
+        }
     }
-  }
 
-  return availableFormats[0];
+    for (const auto& f : availableFormats) {
+        if (f.format == VK_FORMAT_R8G8B8A8_UNORM &&
+            f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            return f;
+        }
+    }
+
+    return availableFormats[0];
 }
 
 VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(

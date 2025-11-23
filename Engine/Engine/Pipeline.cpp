@@ -9,7 +9,7 @@
 
 VLE_NS_B
 
-Pipeline::Pipeline(EngineDevice& device, const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfInfo& conf) 
+Pipeline::Pipeline(EngineDevice& device, const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& conf)
 	: _device(device)
 {
 	this->createGfxPipeline(vertFilePath, fragFilePath, conf);
@@ -26,9 +26,7 @@ void Pipeline::bind(VkCommandBuffer commandBuffer) {
 }
 
 
-PipelineConfInfo Pipeline::defaultPipelineConfigInfo(std::uint32_t w, std::uint32_t h) {
-	PipelineConfInfo configInfo{};
-
+void Pipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo, std::uint32_t w, std::uint32_t h) {
 	configInfo.assemblyInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	configInfo.assemblyInputInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	configInfo.assemblyInputInfo.primitiveRestartEnable = VK_FALSE;
@@ -98,7 +96,6 @@ PipelineConfInfo Pipeline::defaultPipelineConfigInfo(std::uint32_t w, std::uint3
 	configInfo.pipelineLayout = nullptr;
 	configInfo.renderPass = nullptr;
 
-	return configInfo;
 }
 
 std::vector<char> Pipeline::readFile(const std::string& path) {
@@ -118,7 +115,7 @@ std::vector<char> Pipeline::readFile(const std::string& path) {
 }
 
 
-void Pipeline::createGfxPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfInfo& configInfo) {
+void Pipeline::createGfxPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo) {
 	auto vertCode = this->readFile(vertFilePath);
 	auto fragCode = this->readFile(fragFilePath);
 
