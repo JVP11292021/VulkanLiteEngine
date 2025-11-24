@@ -10,14 +10,17 @@
 VLE_NS_B
 
 struct PipelineConfigInfo {
-	VkViewport viewport;
-	VkRect2D scissor;
+	PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+	PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
+
 	VkPipelineInputAssemblyStateCreateInfo assemblyInputInfo;
 	VkPipelineRasterizationStateCreateInfo rasterizationInfo;
 	VkPipelineMultisampleStateCreateInfo multisampleInfo;
 	VkPipelineColorBlendAttachmentState colorBlendAttachment;
 	VkPipelineColorBlendStateCreateInfo colorBlendInfo;
 	VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+	std::vector<VkDynamicState> dynamicStateEnables;
+	VkPipelineDynamicStateCreateInfo dynamicStateInfo;
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkRenderPass renderPass = nullptr;
 	uint32_t subpass = 0;
@@ -32,7 +35,7 @@ public:
 	Pipeline& operator=(const Pipeline&) = delete;
 
 	void bind(VkCommandBuffer commandBuffer);
-	static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo, std::uint32_t w, std::uint32_t h);
+	static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 
 
 private:

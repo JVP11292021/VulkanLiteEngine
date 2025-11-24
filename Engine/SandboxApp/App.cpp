@@ -92,9 +92,7 @@ private:
 
 		vle::PipelineConfigInfo pipelineConfig{};
 		vle::Pipeline::defaultPipelineConfigInfo(
-			pipelineConfig,
-			this->swapChain->width(),
-			this->swapChain->height());
+			pipelineConfig);
 		pipelineConfig.renderPass = this->swapChain->getRenderPass();
 		pipelineConfig.renderPass = this->swapChain->getRenderPass();
 		pipelineConfig.pipelineLayout = this->pipelineLayout;
@@ -193,6 +191,17 @@ private:
 		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(this->commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(this->swapChain->getSwapChainExtent().width);
+		viewport.height = static_cast<float>(this->swapChain->getSwapChainExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		VkRect2D scissor{ {0, 0}, this->swapChain->getSwapChainExtent() };
+		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
 		this->pipeline->bind(this->commandBuffers[imageIndex]);
 		this->model->bind(this->commandBuffers[imageIndex]);
