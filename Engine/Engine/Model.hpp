@@ -13,6 +13,7 @@ VLE_NS_B
 #define VLE_PUSH_CONST_FRAG_FLAG VK_SHADER_STAGE_FRAGMENT_BIT
 
 struct SimplePushConstantData {
+	glm::mat2 transform{ 1.f };
 	glm::vec2 offset;
 	alignas(16) glm::vec3 color;
 };

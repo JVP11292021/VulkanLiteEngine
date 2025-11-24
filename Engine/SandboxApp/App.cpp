@@ -6,6 +6,7 @@
 #include <SwapChain.hpp>
 #include <Pipeline.hpp>
 #include <Model.hpp>
+#include <Object.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -17,7 +18,7 @@ public:
 	static constexpr std::int32_t HEIGHT = 600;
 
 	FirstApp() {
-		this->loadModels();
+		this->loadObjects();
 		this->createPipelineLayout();
 		this->recreateSwapChain();
 		this->createCommandBuffers();
@@ -67,10 +68,37 @@ private:
 		}
 	}
 
-	void loadModels() {
+	void loadObjects() {
 		std::vector<vle::ShaderModel::Vertex> vertices{};
 		sierpinski(vertices, 5, { -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, -0.5f }, { 0.0f, 0.0f, 1.0f });
-		this->model = std::make_unique<vle::ShaderModel>(this->device, vertices);
+		//std::vector<vle::ShaderModel::Vertex> vertices{
+		//	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		//	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+		//	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}} };
+		auto model = std::make_shared<vle::ShaderModel>(this->device, vertices);
+
+		auto triangle = vle::Object::create();
+		triangle.model = model;
+		triangle.color = { .1f, .8f, .1f };
+		triangle.transform2d.translation.x = .2f;
+		triangle.transform2d.scale = {2.f, .5f};
+		triangle.transform2d.rotation = .25f * glm::two_pi<float>();
+		this->objects.push_back(std::move(triangle));
+	}
+
+	void renderGameObjects(VkCommandBuffer commandBuffer) {
+		this->pipeline->bind(commandBuffer);
+		
+		for (auto& obj : this->objects) {
+			vle::SimplePushConstantData push{};
+			push.offset = obj.transform2d.translation;
+			push.color = obj.color;
+			push.transform = obj.transform2d.mat2();
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(vle::SimplePushConstantData), &push);
+			obj.model->bind(commandBuffer);
+			obj.model->draw(commandBuffer);
+		}
+
 	}
 
 	void createPipelineLayout() {
@@ -175,8 +203,6 @@ private:
 	}
 
 	void recordCommandBuffer(std::int32_t imageIndex) {
-		static std::int32_t frame = 0;
-		frame = (frame + 1) % 1000;
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -212,16 +238,7 @@ private:
 		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-		this->pipeline->bind(this->commandBuffers[imageIndex]);
-		this->model->bind(this->commandBuffers[imageIndex]);
-
-		for (std::int32_t i = 0; i < 4; i++) {
-			vle::SimplePushConstantData push{};
-			push.offset = { -0.5f + frame * 0.002f, -0.4f + i * 0.25 };
-			push.color = { 0.0f, 0.0f, 0.2f + 0.2f * i };
-			vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(vle::SimplePushConstantData), &push);
-			this->model->draw(this->commandBuffers[imageIndex]);
-		}
+		this->renderGameObjects(commandBuffers[imageIndex]);
 
 		vkCmdEndRenderPass(this->commandBuffers[imageIndex]);
 		if (vkEndCommandBuffer(this->commandBuffers[imageIndex]) != VK_SUCCESS) {
@@ -236,7 +253,7 @@ private:
 	std::unique_ptr<vle::Pipeline> pipeline;
 	VkPipelineLayout pipelineLayout;
 	std::vector<VkCommandBuffer> commandBuffers;
-	std::unique_ptr<vle::ShaderModel> model;
+	std::vector<vle::Object> objects;
 };
 
 int main() {
