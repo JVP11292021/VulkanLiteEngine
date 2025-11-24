@@ -71,6 +71,7 @@ private:
 	void loadObjects() {
 		std::vector<vle::ShaderModel::Vertex> vertices{};
 		sierpinski(vertices, 5, { -0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, -0.5f }, { 0.0f, 0.0f, 1.0f });
+		std::cout << "Vertices count: " << vertices.size() * 3 << "\n";
 		//std::vector<vle::ShaderModel::Vertex> vertices{
 		//	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 		//	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -94,6 +95,7 @@ private:
 			push.offset = obj.transform2d.translation;
 			push.color = obj.color;
 			push.transform = obj.transform2d.mat2();
+			obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(vle::SimplePushConstantData), &push);
 			obj.model->bind(commandBuffer);
 			obj.model->draw(commandBuffer);
