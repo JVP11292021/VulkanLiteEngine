@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "Device.hpp"
-#include "defs.hpp"
-#include "Window.hpp"
-#include "SwapChain.hpp"
-#include "Pipeline.hpp"
-#include "Model.hpp"
+#include <Device.hpp>
+#include <defs.hpp>
+#include <Window.hpp>
+#include <SwapChain.hpp>
+#include <Pipeline.hpp>
+#include <Model.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -74,12 +74,18 @@ private:
 	}
 
 	void createPipelineLayout() {
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VLE_PUSH_CONST_VERT_FRAG_FLAG;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(vle::SimplePushConstantData);
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = 0;
 		pipelineLayoutInfo.pSetLayouts = nullptr;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (vkCreatePipelineLayout(this->device.device(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create pipeline layout");
@@ -169,6 +175,9 @@ private:
 	}
 
 	void recordCommandBuffer(std::int32_t imageIndex) {
+		static std::int32_t frame = 0;
+		frame = (frame + 1) % 1000;
+
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -205,7 +214,14 @@ private:
 
 		this->pipeline->bind(this->commandBuffers[imageIndex]);
 		this->model->bind(this->commandBuffers[imageIndex]);
-		this->model->draw(this->commandBuffers[imageIndex]);
+
+		for (std::int32_t i = 0; i < 4; i++) {
+			vle::SimplePushConstantData push{};
+			push.offset = { -0.5f + frame * 0.002f, -0.4f + i * 0.25 };
+			push.color = { 0.0f, 0.0f, 0.2f + 0.2f * i };
+			vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(vle::SimplePushConstantData), &push);
+			this->model->draw(this->commandBuffers[imageIndex]);
+		}
 
 		vkCmdEndRenderPass(this->commandBuffers[imageIndex]);
 		if (vkEndCommandBuffer(this->commandBuffers[imageIndex]) != VK_SUCCESS) {
