@@ -1,9 +1,10 @@
 #include <iostream>
 
+#include "Renderer.hpp"
+
 #include <Device.hpp>
 #include <defs.hpp>
 #include <Window.hpp>
-#include <SwapChain.hpp>
 #include <Pipeline.hpp>
 #include <Model.hpp>
 #include <Object.hpp>
@@ -20,8 +21,7 @@ public:
 	FirstApp() {
 		this->loadObjects();
 		this->createPipelineLayout();
-		this->recreateSwapChain();
-		this->createCommandBuffers();
+		this->createPipeline();
 	}
 
 	~FirstApp() {
@@ -34,7 +34,12 @@ public:
 	void run() {
 		while (!this->win.shouldClose()) {
 			glfwPollEvents();
-			this->drawFrame();
+			if (auto commandBuffer = this->renderer.beginFrame()) {
+				this->renderer.beginSwapChainRenderPass(commandBuffer);
+				this->renderGameObjects(commandBuffer);
+				this->renderer.endSwapChainRenderPass(commandBuffer);
+				this->renderer.endFrame();
+			}
 		}
 
 		vkDeviceWaitIdle(this->device.device());
@@ -123,138 +128,23 @@ private:
 	}
 
 	void createPipeline() {
-		assert(this->swapChain != nullptr && "Cannot create pipeline before swap chain");
 		assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		vle::PipelineConfigInfo pipelineConfig{};
 		vle::Pipeline::defaultPipelineConfigInfo(
 			pipelineConfig);
-		pipelineConfig.renderPass = this->swapChain->getRenderPass();
-		pipelineConfig.renderPass = this->swapChain->getRenderPass();
+		pipelineConfig.renderPass = this->renderer.getSwapChainRenderPass();
 		pipelineConfig.pipelineLayout = this->pipelineLayout;
 		this->pipeline = std::make_unique<vle::Pipeline>(device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", pipelineConfig);
-	}
-
-	void freeCommandBuffers() {
-		vkFreeCommandBuffers(
-			this->device.device(),
-			this->device.getCommandPool(),
-			static_cast<std::uint32_t>(this->commandBuffers.size()),
-			this->commandBuffers.data());
-		this->commandBuffers.clear();
-	}
-
-	void createCommandBuffers() {
-		this->commandBuffers.resize(this->swapChain->imageCount());
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = this->device.getCommandPool();
-		allocInfo.commandBufferCount = static_cast<std::uint32_t>(this->commandBuffers.size());
-
-		if (vkAllocateCommandBuffers(this->device.device(), &allocInfo, this->commandBuffers.data()) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to allocate command buffers");
-		}
-	}
-
-	void drawFrame() {
-		std::uint32_t imageIndex;
-		auto result = this->swapChain->acquireNextImage(&imageIndex);
-
-		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			this->recreateSwapChain();
-			return;
-		}
-
-		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-			throw std::runtime_error("Failed to acquire swap chain image");
-		}
-
-		this->recordCommandBuffer(imageIndex);
-		result = this->swapChain->submitCommandBuffers(&this->commandBuffers[imageIndex], &imageIndex);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->win.wasWindowResized()) {
-			this->win.resetWindowResized();
-			this->recreateSwapChain();
-			return;
-		}
-		if (result != VK_SUCCESS) {
-			throw std::runtime_error("Failed to present swap chain image");
-		}
-	}
-
-	void recreateSwapChain() {
-		auto extent = this->win.getExtent();
-		while (extent.width == 0 || extent.height == 0) {
-			extent = this->win.getExtent();
-			glfwWaitEvents();
-		}
-		vkDeviceWaitIdle(this->device.device());
-
-		if (this->swapChain == nullptr) {
-			this->swapChain = std::make_unique<vle::EngineSwapChain>(this->device, extent);
-		}
-		else {
-			std::shared_ptr<vle::EngineSwapChain> oldSwapChain = std::move(this->swapChain);
-			this->swapChain= std::make_unique<vle::EngineSwapChain>(this->device, extent, oldSwapChain);
-			assert(
-				this->swapChain->imageCount() == oldSwapChain->imageCount() &&
-				"Swap chain image count has changed!");
-		}
-
-		this->createPipeline();
-	}
-
-	void recordCommandBuffer(std::int32_t imageIndex) {
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		if (vkBeginCommandBuffer(this->commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to begin recording command buffer");
-		}
-
-		VkRenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = this->swapChain->getRenderPass();
-		renderPassInfo.framebuffer = this->swapChain->getFrameBuffer(imageIndex);
-
-		renderPassInfo.renderArea.offset = { 0,0 };
-		renderPassInfo.renderArea.extent = this->swapChain->getSwapChainExtent();
-
-		std::array<VkClearValue, 2> clearValues{};
-		clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
-		clearValues[1].depthStencil = { 1.0f, 0 };
-		renderPassInfo.clearValueCount = static_cast<std::uint32_t>(clearValues.size());
-		renderPassInfo.pClearValues = clearValues.data();
-
-		vkCmdBeginRenderPass(this->commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(this->swapChain->getSwapChainExtent().width);
-		viewport.height = static_cast<float>(this->swapChain->getSwapChainExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		VkRect2D scissor{ {0, 0}, this->swapChain->getSwapChainExtent() };
-		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
-		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
-
-		this->renderGameObjects(commandBuffers[imageIndex]);
-
-		vkCmdEndRenderPass(this->commandBuffers[imageIndex]);
-		if (vkEndCommandBuffer(this->commandBuffers[imageIndex]) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to record command buffer");
-		}
 	}
 
 private:
 	vle::EngineWindow win{WIDTH, HEIGHT, "Hello Vulkan"};
 	vle::EngineDevice device{ win };
-	std::unique_ptr<vle::EngineSwapChain> swapChain;
+	Renderer renderer{ win, device }; 
+
 	std::unique_ptr<vle::Pipeline> pipeline;
 	VkPipelineLayout pipelineLayout;
-	std::vector<VkCommandBuffer> commandBuffers;
 	std::vector<vle::Object> objects;
 };
 
