@@ -110,7 +110,6 @@ void Renderer::freeCommandBuffers() {
 void Renderer::createCommandBuffers() {
 	this->commandBuffers.resize(vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-	this->commandBuffers.resize(this->swapChain->imageCount());
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
