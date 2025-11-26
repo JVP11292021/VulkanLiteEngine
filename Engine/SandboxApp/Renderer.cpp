@@ -3,7 +3,7 @@
 #include <array>
 
 Renderer::Renderer(vle::EngineWindow& win, vle::EngineDevice& device) 
-	: win(win), device(device), currentImageIndex(0), isFrameStarted(false)
+	: win(win), device(device), currentImageIndex(0), currentFrameIndex(0), isFrameStarted(false)
 {
 	this->recreateSwapChain();
 	this->createCommandBuffers();
@@ -57,6 +57,7 @@ void Renderer::endFrame() {
 	}
 
 	this->isFrameStarted = false;
+	this->currentFrameIndex = (this->currentFrameIndex + 1) % vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT;
 }
 
 void Renderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
@@ -107,6 +108,8 @@ void Renderer::freeCommandBuffers() {
 }
 
 void Renderer::createCommandBuffers() {
+	this->commandBuffers.resize(vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+
 	this->commandBuffers.resize(this->swapChain->imageCount());
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -136,5 +139,10 @@ void Renderer::recreateSwapChain() {
 		assert(
 			this->swapChain->imageCount() == oldSwapChain->imageCount() &&
 			"Swap chain image count has changed!");
+
+		if (!oldSwapChain->compareSwapFormats(*this->swapChain.get())) {
+			throw std::runtime_error("Swap chain image(or depth) format ahs changed");
+		}
+	
 	}
 }

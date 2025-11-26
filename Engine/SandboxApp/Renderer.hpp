@@ -23,8 +23,12 @@ public:
 	VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
 	inline bool isFrameInProgress() const { return this->isFrameStarted; }
 	inline VkCommandBuffer getCurrentCommandBuffer() const { 
-		assert(this->isFrameStarted && "Could not get command buffer when fram is not in progress");
-		return this->commandBuffers[this->currentImageIndex]; 
+		assert(this->isFrameStarted && "Could not get command buffer when frame is not in progress");
+		return this->commandBuffers[this->currentFrameIndex]; 
+	}
+	inline std::int32_t getFrameIndex() const {
+		assert(this->isFrameStarted && "Cannot get frameIndex when frame is not in progress");
+		return this->currentFrameIndex;
 	}
 
 public:
@@ -45,6 +49,7 @@ private:
 	std::vector<VkCommandBuffer> commandBuffers;
 
 	std::uint32_t currentImageIndex;
+	std::int32_t currentFrameIndex;
 	bool isFrameStarted;
 };
 
