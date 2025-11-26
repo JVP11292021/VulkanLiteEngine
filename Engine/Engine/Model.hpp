@@ -13,15 +13,14 @@ VLE_NS_B
 #define VLE_PUSH_CONST_FRAG_FLAG VK_SHADER_STAGE_FRAGMENT_BIT
 
 struct SimplePushConstantData {
-	glm::mat2 transform{ 1.f };
-	glm::vec2 offset;
+	glm::mat4 transform{ 1.f };
 	alignas(16) glm::vec3 color;
 };
 
 class ShaderModel {
 public:
 	struct Vertex {
-		glm::vec2 position;
+		glm::vec3 position;
 		glm::vec3 color;
 
 		static std::vector<VkVertexInputBindingDescription> getBindingDescription();
