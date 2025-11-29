@@ -3,6 +3,7 @@
 
 #include "defs.hpp"
 #include "Device.hpp"
+#include "Buffer.hpp"
 
 #include <vector>
 #include <string>
@@ -57,14 +58,12 @@ private:
 	EngineDevice& _device;
 
 	// Vertex buffer variables
-	VkBuffer _vertexBuffer;
-	VkDeviceMemory _vertexBufferMemory;
+	std::unique_ptr<Buffer> _vertexBuffer;
 	std::uint32_t _vertexCount;
 
 	// Index buffer variables
 	bool _hasIndexBuffer = false;
-	VkBuffer _indexBuffer;
-	VkDeviceMemory _indexBufferMemory;
+	std::unique_ptr<Buffer> _indexBuffer;
 	std::uint32_t _indexCount;
 };
 

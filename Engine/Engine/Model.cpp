@@ -113,24 +113,16 @@ ShaderModel::ShaderModel(EngineDevice& device, const ShaderModel::Builder& build
 	this->createIndexBuffers(builder.indices);
 }
 
-ShaderModel::~ShaderModel() {
-	vkDestroyBuffer(this->_device.device(), this->_vertexBuffer, nullptr);
-	vkFreeMemory(this->_device.device(), this->_vertexBufferMemory, nullptr);
-
-	if (this->_hasIndexBuffer) {
-		vkDestroyBuffer(this->_device.device(), this->_indexBuffer, nullptr);
-		vkFreeMemory(this->_device.device(), this->_indexBufferMemory, nullptr);
-	}
-}
+ShaderModel::~ShaderModel() {}
 
 
 void ShaderModel::bind(VkCommandBuffer commandBuffer) {
-	VkBuffer buffers[] = { this->_vertexBuffer };
+	VkBuffer buffers[] = { this->_vertexBuffer->getBuffer()};
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
 	if (this->_hasIndexBuffer) {
-		vkCmdBindIndexBuffer(commandBuffer, this->_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, this->_indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 	}
 }
 
@@ -151,35 +143,27 @@ void ShaderModel::createVertexBuffers(const std::vector<Vertex>& vertices) {
 	this->_vertexCount = static_cast<std::uint32_t>(vertices.size());
 	assert(this->_vertexCount >= 3 && "Vertex count must be at least 3 (Triangle)");
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * this->_vertexCount;
+	std::uint32_t vertexSize = sizeof(vertices[0]);
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-
-	this->_device.createBuffer(
-		bufferSize,
+	Buffer stagingBuffer{
+		this->_device,
+		vertexSize,
+		this->_vertexCount,
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer,
-		stagingBufferMemory);
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-	void* data;
-	VkDeviceSize offset = static_cast<VkDeviceSize>(0uLL);
-	VkMemoryMapFlags flags = static_cast<VkMemoryMapFlags>(0);
-	vkMapMemory(this->_device.device(), stagingBufferMemory, offset, bufferSize, flags, &data);
-	memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-	vkUnmapMemory(this->_device.device(), stagingBufferMemory);
+	stagingBuffer.map();
+	stagingBuffer.writeToBuffer((void*)vertices.data());
 
-	this->_device.createBuffer(
-		bufferSize,
+	this->_vertexBuffer = std::make_unique<Buffer>(
+		this->_device,
+		vertexSize,
+		this->_vertexCount,
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		this->_vertexBuffer,
-		this->_vertexBufferMemory);
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	this->_device.copyBuffer(stagingBuffer, this->_vertexBuffer, bufferSize);
 
-	vkDestroyBuffer(this->_device.device(), stagingBuffer, nullptr);
-	vkFreeMemory(this->_device.device(), stagingBufferMemory, nullptr);
+	this->_device.copyBuffer(stagingBuffer.getBuffer(), this->_vertexBuffer->getBuffer(), bufferSize);
 }
 
 void ShaderModel::createIndexBuffers(const std::vector<std::uint32_t>& indices) {
@@ -189,34 +173,27 @@ void ShaderModel::createIndexBuffers(const std::vector<std::uint32_t>& indices) 
 	if (!this->_hasIndexBuffer) return;
 
 	VkDeviceSize bufferSize = sizeof(indices[0]) * this->_indexCount;
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
+	std::uint32_t indexSize = sizeof(indices[0]);
 
-	this->_device.createBuffer(
-		bufferSize,
+	Buffer stagingBuffer{
+		this->_device,
+		indexSize,
+		this->_indexCount,
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer,
-		stagingBufferMemory);
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
-	void* data;
-	VkDeviceSize offset = static_cast<VkDeviceSize>(0uLL);
-	VkMemoryMapFlags flags = static_cast<VkMemoryMapFlags>(0);
-	vkMapMemory(this->_device.device(), stagingBufferMemory, offset, bufferSize, flags, &data);
-	memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-	vkUnmapMemory(this->_device.device(), stagingBufferMemory);
+	stagingBuffer.map();
+	stagingBuffer.writeToBuffer((void*)indices.data());
 
-	this->_device.createBuffer(
-		bufferSize,
+	this->_indexBuffer = std::make_unique<Buffer>(
+		this->_device,
+		indexSize,
+		this->_indexCount,
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		this->_indexBuffer,
-		this->_indexBufferMemory);
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	this->_device.copyBuffer(stagingBuffer, this->_indexBuffer, bufferSize);
+	this->_device.copyBuffer(stagingBuffer.getBuffer(), this->_indexBuffer->getBuffer(), bufferSize);
 
-	vkDestroyBuffer(this->_device.device(), stagingBuffer, nullptr);
-	vkFreeMemory(this->_device.device(), stagingBufferMemory, nullptr);
 }
 
 VLE_NS_E
