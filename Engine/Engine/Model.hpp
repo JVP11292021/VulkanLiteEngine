@@ -27,8 +27,13 @@ public:
 		static std::vector<VkVertexInputAttributeDescription> getAttributeDescription();
 
 	};
+
+	struct Builder {
+		std::vector<Vertex> vertices{};
+		std::vector<std::uint32_t> indices{};
+	};
 public:
-	ShaderModel(EngineDevice& device, const std::vector<Vertex>& vertices);
+	ShaderModel(EngineDevice& device, const ShaderModel::Builder& builder);
 	~ShaderModel();
 
 	ShaderModel(const ShaderModel&) = delete;
@@ -41,12 +46,21 @@ public:
 
 private:
 	void createVertexBuffers(const std::vector<Vertex>& vertices);
+	void createIndexBuffers(const std::vector<std::uint32_t>& indices);
 
 private:
 	EngineDevice& _device;
+
+	// Vertex buffer variables
 	VkBuffer _vertexBuffer;
 	VkDeviceMemory _vertexBufferMemory;
 	std::uint32_t _vertexCount;
+
+	// Index buffer variables
+	bool _hasIndexBuffer = false;
+	VkBuffer _indexBuffer;
+	VkDeviceMemory _indexBufferMemory;
+	std::uint32_t _indexCount;
 };
 
 VLE_NS_E

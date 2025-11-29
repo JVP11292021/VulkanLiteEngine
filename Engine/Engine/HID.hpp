@@ -28,8 +28,8 @@ public:
 
 private:
     KeyMappings _keys{};
-    float _moveSpeed = .00005f;
-    float _lookSpeed = .00005f;
+    float _moveSpeed = .0001f;
+    float _lookSpeed = .0001f;
 };
 
 VLE_NS_E
