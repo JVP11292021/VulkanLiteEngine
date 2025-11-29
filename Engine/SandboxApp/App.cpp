@@ -48,6 +48,9 @@ public:
 			auto newTime = std::chrono::high_resolution_clock::now();
 			float frameTimeElapsed = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
 
+			constexpr auto MAX_FRAME_TIME_ELAPSED = 10000.f;
+			frameTimeElapsed = glm::min(frameTimeElapsed, MAX_FRAME_TIME_ELAPSED);
+
 			cameraController.moveInPlainXZ(this->win.getGLFWwindow(), frameTimeElapsed, viewerObject);
 			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
