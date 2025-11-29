@@ -23,6 +23,7 @@ public:
 	inline VkExtent2D getExtent() const { return { static_cast<std::uint32_t>(this->_width), static_cast<std::uint32_t>(this->_height) }; }
 	inline bool wasWindowResized() const { return this->_frameBufferResized; }
 	inline void resetWindowResized() { this->_frameBufferResized = false; }
+	inline GLFWwindow* getGLFWwindow() const { return this->_win; }
 
 public:
 	void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);

@@ -9,7 +9,9 @@
 #include <Model.hpp>
 #include <Object.hpp>
 #include <Camera.hpp>
+#include <HID.hpp>
 
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <array>
@@ -32,13 +34,24 @@ public:
 	void run() {
 		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass() }; 
 		vle::Camera camera{};
-		//camera.setViewDirection(glm::vec3(0.f), glm::vec3(.5f, 0.f, 1.f));
 		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(.0f, .0f, 2.5f));
+
+		auto viewerObject = vle::Object::create();
+		vle::KeyboardMovementController cameraController{};
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
+
 
 		while (!this->win.shouldClose()) {
 			glfwPollEvents();
+
+			auto newTime = std::chrono::high_resolution_clock::now();
+			float frameTimeElapsed = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+
+			cameraController.moveInPlainXZ(this->win.getGLFWwindow(), frameTimeElapsed, viewerObject);
+			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+
 			auto aspect = this->renderer.getAspectRatio();
-			//camera.setOrthoProjection(-aspect, aspect, -1, 1, -1, 1);
 			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
 
 			if (auto commandBuffer = this->renderer.beginFrame()) {
