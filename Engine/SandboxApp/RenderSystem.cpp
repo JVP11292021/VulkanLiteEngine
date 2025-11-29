@@ -1,5 +1,10 @@
 #include "RenderSystem.hpp"
 
+struct SimplePushConstantData {
+	glm::mat4 transform{ 1.f };
+	glm::mat4 normalMatrix{ 1.f };
+};
+
 SimpleRenderSystem::SimpleRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass) 
 	: device(device)
 {
@@ -17,10 +22,11 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::v
 	auto projectionView = camera.getProjection() * camera.getView();
 
 	for (auto& obj : objects) {
-		vle::SimplePushConstantData push{};
-		push.color = obj.color;
-		push.transform = projectionView * obj.transform.mat4();
-		vkCmdPushConstants(commandBuffer, pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(vle::SimplePushConstantData), &push);
+		SimplePushConstantData push{};
+		auto modelMatrix = obj.transform.mat4();
+		push.transform = projectionView * modelMatrix;
+		push.normalMatrix = obj.transform.normalMatrix();
+		vkCmdPushConstants(commandBuffer, pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(SimplePushConstantData), &push);
 		obj.model->bind(commandBuffer);
 		obj.model->draw(commandBuffer);
 	}
@@ -32,7 +38,7 @@ void SimpleRenderSystem::createPipelineLayout() {
 	VkPushConstantRange pushConstantRange{};
 	pushConstantRange.stageFlags = VLE_PUSH_CONST_VERT_FRAG_FLAG;
 	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(vle::SimplePushConstantData);
+	pushConstantRange.size = sizeof(SimplePushConstantData);
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

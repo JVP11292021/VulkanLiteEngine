@@ -1,6 +1,7 @@
 #include "Model.hpp"
 
 #include "Utils.hpp"
+#include "Helpers.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
@@ -33,18 +34,12 @@ std::vector<VkVertexInputBindingDescription> ShaderModel::Vertex::getBindingDesc
 }
 
 std::vector<VkVertexInputAttributeDescription> ShaderModel::Vertex::getAttributeDescription() {
-	std::uint32_t initial = 2u;
-	std::vector<VkVertexInputAttributeDescription> attributeDescriptions(initial);
-	attributeDescriptions[0].binding = 0;
-	attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[0].location = 0;
-	attributeDescriptions[0].offset = offsetof(ShaderModel::Vertex, position);
-
-	attributeDescriptions[1].binding = 0;
-	attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[1].location = 1;
-	attributeDescriptions[1].offset = offsetof(ShaderModel::Vertex, color);
-	return attributeDescriptions;
+	return VertexAttributeBuilder{}
+		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32B32_SFLOAT, &ShaderModel::Vertex::position)
+		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32B32_SFLOAT, &ShaderModel::Vertex::color)
+		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32B32_SFLOAT, &ShaderModel::Vertex::normal)
+		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32_SFLOAT, &ShaderModel::Vertex::uv)
+		.build();
 }
 
 void ShaderModel::Builder::loadModel(const std::string& filePath) {
@@ -79,17 +74,11 @@ void ShaderModel::Builder::loadModel(const std::string& filePath) {
 					attrib.vertices[3 * index.vertex_index + 2],
 				};
 
-				auto colorIndex = 3 * index.vertex_index + 2;
-				if (colorIndex < attrib.colors.size()) {
-					vertex.color = {
-						attrib.colors[colorIndex - 2],
-						attrib.colors[colorIndex - 1],
-						attrib.colors[colorIndex - 0],
-					};
-				}
-				else {
-					vertex.color = { 1.f, 1.f, 1.f };  // set default color
-				}
+				vertex.color = {
+					attrib.colors[3 * index.vertex_index + 0],
+					attrib.colors[3 * index.vertex_index + 1],
+					attrib.colors[3 * index.vertex_index + 2],
+				};
 			}
 
 			if (index.normal_index >= 0) {

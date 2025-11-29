@@ -14,11 +14,6 @@ VLE_NS_B
 #define VLE_PUSH_CONST_VERT_FLAG VK_SHADER_STAGE_VERTEX_BIT
 #define VLE_PUSH_CONST_FRAG_FLAG VK_SHADER_STAGE_FRAGMENT_BIT
 
-struct SimplePushConstantData {
-	glm::mat4 transform{ 1.f };
-	alignas(16) glm::vec3 color;
-};
-
 class ShaderModel {
 public:
 	struct Vertex {

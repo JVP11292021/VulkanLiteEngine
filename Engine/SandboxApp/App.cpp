@@ -34,7 +34,7 @@ public:
 	void run() {
 		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass() }; 
 		vle::Camera camera{};
-		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(.0f, .0f, 2.5f));
+		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(.0f, .5f, 2.5f));
 
 		auto viewerObject = vle::Object::create();
 		vle::KeyboardMovementController cameraController{};
@@ -69,7 +69,7 @@ public:
 private:
 
 	void loadObjects() {
-		std::shared_ptr<vle::ShaderModel> model = vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+		std::shared_ptr<vle::ShaderModel> model = vle::ShaderModel::createModelFromFile(this->device, "models/flat_vase.obj");
 		auto centreObject = vle::Object::create();
 		centreObject.model = model;
 		centreObject.transform.translation = { .0f,.0f,2.5f };
