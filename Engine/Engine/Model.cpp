@@ -1,5 +1,8 @@
 #include "Model.hpp"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tinyobjloader/tiny_obj_loader.h>
+
 #include <cstring>
 
 VLE_NS_B
