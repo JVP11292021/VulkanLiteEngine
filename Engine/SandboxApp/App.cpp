@@ -69,12 +69,12 @@ public:
 private:
 
 	void loadObjects() {
-		std::shared_ptr<vle::ShaderModel> model = vle::ShaderModel::createModelFromFile(this->device, "models/colored_cube.obj");
-		auto cube = vle::Object::create();
-		cube.model = model;
-		cube.transform.translation = { .0f,.0f,2.5f };
-		cube.transform.scale = { .5f,.5f,.5f };
-		this->objects.push_back(std::move(cube));
+		std::shared_ptr<vle::ShaderModel> model = vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+		auto centreObject = vle::Object::create();
+		centreObject.model = model;
+		centreObject.transform.translation = { .0f,.0f,2.5f };
+		centreObject.transform.scale = glm::vec3{ 3.f };
+		this->objects.push_back(std::move(centreObject));
 	}
 
 private:

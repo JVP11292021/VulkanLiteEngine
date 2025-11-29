@@ -1,10 +1,25 @@
 #include "Model.hpp"
 
+#include "Utils.hpp"
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 #include <cstring>
-#include <iostream>
+#include <unordered_map>
+
+namespace std {
+template<>
+struct hash<vle::ShaderModel::Vertex> {
+	size_t operator()(vle::ShaderModel::Vertex const& vertex) const {
+		size_t seed = 0;
+		vle::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+		return seed;
+	}
+};
+} // End namespace std
 
 VLE_NS_B
 
@@ -45,6 +60,7 @@ void ShaderModel::Builder::loadModel(const std::string& filePath) {
 	this->vertices.clear();
 	this->indices.clear();
 
+	std::unordered_map<Vertex, std::uint32_t> uniqueVertices{};
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex{};
@@ -91,7 +107,12 @@ void ShaderModel::Builder::loadModel(const std::string& filePath) {
 				};
 			}
 
-			this->vertices.push_back(vertex);
+			if (uniqueVertices.count(vertex) == 0) {
+				uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
+				this->vertices.push_back(vertex);
+			}
+
+			indices.push_back(uniqueVertices[vertex]);
 		}
 	}
 }
@@ -134,7 +155,6 @@ void ShaderModel::draw(VkCommandBuffer commandBuffer) {
 std::unique_ptr<ShaderModel> ShaderModel::createModelFromFile(EngineDevice& device, const std::string& filePath) {
 	Builder builder{};
 	builder.loadModel(filePath);
-	std::cout << "Vertex count" << builder.vertices.size() << "\n";
 	return std::make_unique<ShaderModel>(device, builder);
 }
 
