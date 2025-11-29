@@ -5,6 +5,8 @@
 #include "Device.hpp"
 
 #include <vector>
+#include <string>
+#include <memory>
 
 VLE_NS_B
 
@@ -22,6 +24,8 @@ public:
 	struct Vertex {
 		glm::vec3 position;
 		glm::vec3 color;
+		glm::vec3 normal{};
+		glm::vec2 uv{}; 
 
 		static std::vector<VkVertexInputBindingDescription> getBindingDescription();
 		static std::vector<VkVertexInputAttributeDescription> getAttributeDescription();
@@ -31,6 +35,8 @@ public:
 	struct Builder {
 		std::vector<Vertex> vertices{};
 		std::vector<std::uint32_t> indices{};
+
+		void loadModel(const std::string& filePath);
 	};
 public:
 	ShaderModel(EngineDevice& device, const ShaderModel::Builder& builder);
@@ -43,6 +49,7 @@ public:
 	void bind(VkCommandBuffer commandBuffer);
 	void draw(VkCommandBuffer commandBuffer);
 
+	static std::unique_ptr<ShaderModel> createModelFromFile(EngineDevice& device, const std::string& filePath);
 
 private:
 	void createVertexBuffers(const std::vector<Vertex>& vertices);
