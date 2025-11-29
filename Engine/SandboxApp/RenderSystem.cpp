@@ -11,7 +11,7 @@ SimpleRenderSystem::~SimpleRenderSystem() {
 	vkDestroyPipelineLayout(this->device.device(), pipelineLayout, nullptr);
 }
 
-void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<vle::Object>& objects) {
+void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<vle::Object>& objects, const vle::Camera& camera) {
 	this->pipeline->bind(commandBuffer);
 
 	for (auto& obj : objects) {
@@ -20,7 +20,7 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::v
 
 		vle::SimplePushConstantData push{};
 		push.color = obj.color;
-		push.transform = obj.transform.mat4();
+		push.transform = camera.getProjection() * obj.transform.mat4();
 		vkCmdPushConstants(commandBuffer, pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(vle::SimplePushConstantData), &push);
 		obj.model->bind(commandBuffer);
 		obj.model->draw(commandBuffer);

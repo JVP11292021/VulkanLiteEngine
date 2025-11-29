@@ -8,6 +8,7 @@
 #include <Window.hpp>
 #include <Model.hpp>
 #include <Object.hpp>
+#include <Camera.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -30,12 +31,14 @@ public:
 
 	void run() {
 		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass() }; 
+		vle::Camera camera{};
+		camera.setOrthoProjection(-1, 1, -1, 1, -1, 1);
 
 		while (!this->win.shouldClose()) {
 			glfwPollEvents();
 			if (auto commandBuffer = this->renderer.beginFrame()) {
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(commandBuffer, this->objects);
+				simpleRenderSystem.renderGameObjects(commandBuffer, this->objects, camera);
 				this->renderer.endSwapChainRenderPass(commandBuffer);
 				this->renderer.endFrame();
 			}
@@ -62,7 +65,7 @@ private:
 				{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
 				{{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
 				{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-
+				            
 				// top face (orange, remember y axis points down)
 				{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
 				{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
