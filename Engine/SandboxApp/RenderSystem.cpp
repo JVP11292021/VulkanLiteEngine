@@ -13,22 +13,22 @@ SimpleRenderSystem::SimpleRenderSystem(vle::EngineDevice& device, VkRenderPass r
 }
 
 SimpleRenderSystem::~SimpleRenderSystem() {
-	vkDestroyPipelineLayout(this->device.device(), pipelineLayout, nullptr);
+	vkDestroyPipelineLayout(this->device.device(), this->pipelineLayout, nullptr);
 }
 
-void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<vle::Object>& objects, const vle::Camera& camera) {
-	this->pipeline->bind(commandBuffer);
+void SimpleRenderSystem::renderGameObjects(vle::FrameInfo& frameInfo, std::vector<vle::Object>& objects) {
+	this->pipeline->bind(frameInfo.commandBuffer);
 
-	auto projectionView = camera.getProjection() * camera.getView();
+	auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
 
 	for (auto& obj : objects) {
 		SimplePushConstantData push{};
 		auto modelMatrix = obj.transform.mat4();
 		push.transform = projectionView * modelMatrix;
 		push.normalMatrix = obj.transform.normalMatrix();
-		vkCmdPushConstants(commandBuffer, pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(SimplePushConstantData), &push);
-		obj.model->bind(commandBuffer);
-		obj.model->draw(commandBuffer);
+		vkCmdPushConstants(frameInfo.commandBuffer, this->pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(SimplePushConstantData), &push);
+		obj.model->bind(frameInfo.commandBuffer);
+		obj.model->draw(frameInfo.commandBuffer);
 	}
 
 }

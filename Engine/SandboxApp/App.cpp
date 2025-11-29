@@ -10,12 +10,18 @@
 #include <Object.hpp>
 #include <Camera.hpp>
 #include <HID.hpp>
+#include <Buffer.hpp>
 
 #include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <array>
 #include <vector>
+
+struct GlobalUbo {
+	glm::mat4 projectionView{ 1.f };
+	glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f,-3.f,-2.f });
+};
 
 class FirstApp {
 public:
@@ -32,6 +38,17 @@ public:
 	void operator=(const FirstApp&) = delete;
 
 	void run() {
+		std::vector<std::unique_ptr<vle::Buffer>> uboBuffers(vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (std::int32_t i = 0; i < uboBuffers.size(); i++) {
+			uboBuffers[i] = std::make_unique<vle::Buffer>(
+				this->device,
+				sizeof(GlobalUbo),
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+			uboBuffers[i]->map();
+		}
+
 		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass() }; 
 		vle::Camera camera{};
 		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(.0f, .5f, 2.5f));
@@ -57,8 +74,23 @@ public:
 			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
 
 			if (auto commandBuffer = this->renderer.beginFrame()) {
+				std::int32_t frameIndex = this->renderer.getFrameIndex();
+				vle::FrameInfo frameInfo{
+					frameIndex,
+					frameTimeElapsed,
+					commandBuffer,
+					camera
+				};
+
+				// Update Phase
+				GlobalUbo ubo{};
+				ubo.projectionView = camera.getProjection() * camera.getView();
+				uboBuffers[frameIndex]->writeToBuffer(&ubo, frameIndex);
+				uboBuffers[frameIndex]->flushIndex(frameIndex);
+
+				// Render Phase
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(commandBuffer, this->objects, camera);
+				simpleRenderSystem.renderGameObjects(frameInfo, this->objects);
 				this->renderer.endSwapChainRenderPass(commandBuffer);
 				this->renderer.endFrame();
 			}

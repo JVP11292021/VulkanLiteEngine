@@ -8,6 +8,7 @@
 #include <Pipeline.hpp>
 #include <Object.hpp>
 #include <Camera.hpp>
+#include <FrameInfo.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -22,7 +23,7 @@ public:
 	SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 	SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-	void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<vle::Object>& objects, const vle::Camera& camera);
+	void renderGameObjects(vle::FrameInfo& frameInfo, std::vector<vle::Object>& objects);
 
 private:
 	void createPipelineLayout();
