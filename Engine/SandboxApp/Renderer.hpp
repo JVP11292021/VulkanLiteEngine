@@ -21,6 +21,7 @@ public:
 	void operator=(const Renderer&) = delete;
 
 	VkRenderPass getSwapChainRenderPass() const { return this->swapChain->getRenderPass(); }
+	inline float getAspectRatio() const { return this->swapChain->extentAspectRatio(); }
 	inline bool isFrameInProgress() const { return this->isFrameStarted; }
 	inline VkCommandBuffer getCurrentCommandBuffer() const { 
 		assert(this->isFrameStarted && "Could not get command buffer when frame is not in progress");

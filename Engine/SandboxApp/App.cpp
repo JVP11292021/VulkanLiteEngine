@@ -32,10 +32,13 @@ public:
 	void run() {
 		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass() }; 
 		vle::Camera camera{};
-		camera.setOrthoProjection(-1, 1, -1, 1, -1, 1);
 
 		while (!this->win.shouldClose()) {
 			glfwPollEvents();
+			auto aspect = this->renderer.getAspectRatio();
+			//camera.setOrthoProjection(-aspect, aspect, -1, 1, -1, 1);
+			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
+
 			if (auto commandBuffer = this->renderer.beginFrame()) {
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
 				simpleRenderSystem.renderGameObjects(commandBuffer, this->objects, camera);
@@ -110,7 +113,7 @@ private:
 		std::shared_ptr<vle::ShaderModel> model = this->createCubeModel(this->device, { .0f,.0f,.0f });
 		auto cube = vle::Object::create();
 		cube.model = model;
-		cube.transform.translation = { .0f,.0f,.5f };
+		cube.transform.translation = { .0f,.0f,2.5f };
 		cube.transform.scale = { .5f,.5f,.5f };
 		this->objects.push_back(std::move(cube));
 	}
