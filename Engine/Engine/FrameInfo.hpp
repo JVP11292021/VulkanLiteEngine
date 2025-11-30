@@ -13,6 +13,7 @@ struct FrameInfo {
 	float frameTime;
 	VkCommandBuffer commandBuffer;
 	Camera& camera;
+	VkDescriptorSet globalDescriptorSet;
 };
 
 VLE_NS_E

@@ -16,7 +16,6 @@ void KeyboardMovementController::moveInPlainXZ(GLFWwindow* window, float dt, Obj
 	object.transform.rotation.y = glm::mod(object.transform.rotation.y, glm::two_pi<float>());
 
 	float yaw = object.transform.rotation.y;
-	object.transform.rotation.x = glm::clamp(object.transform.rotation.x, -1.5f, 1.5f);
 	const glm::vec3 forwardDir{ sin(yaw), 0.f, cos(yaw) };
 	const glm::vec3 rightDir{ forwardDir.z, 0.f, -forwardDir.x };
 	const glm::vec3 upDir{ 0.f, -1.f, 0.f };

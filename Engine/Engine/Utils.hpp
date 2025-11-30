@@ -14,6 +14,19 @@ void hashCombine(std::size_t& seed, const T& v, const Rest&... rest) {
 	(hashCombine(seed, rest), ...);
 };
 
+template <typename T, std::size_t Alignment>
+struct AlignedBlock {
+    alignas(Alignment) T data;
+
+private:
+    static constexpr std::size_t base = sizeof(T);
+    static constexpr std::size_t remainder = base % Alignment;
+    static constexpr std::size_t padding = (remainder == 0 ? 0 : Alignment - remainder);
+
+    char _padding[padding]{};
+};
+
+
 VLE_NS_E
 
 #endif // VLE_UTILS_H

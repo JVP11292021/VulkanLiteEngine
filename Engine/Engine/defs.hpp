@@ -14,4 +14,8 @@
 #define VLE_NS_B namespace vle {
 #define VLE_NS_E }
 
+#define VLE_PAD_TO_ALIGNMENT(T, N) \
+    alignas(N) char _padding[(N - (sizeof(T) % N)) % N]
+
+
 #endif // VLE_DEFS_H

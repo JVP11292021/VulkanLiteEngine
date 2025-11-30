@@ -17,7 +17,7 @@
 class SimpleRenderSystem {
 public:
 
-	SimpleRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass);
+	SimpleRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 	~SimpleRenderSystem();
 
 	SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -26,7 +26,7 @@ public:
 	void renderGameObjects(vle::FrameInfo& frameInfo, std::vector<vle::Object>& objects);
 
 private:
-	void createPipelineLayout();
+	void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
 	void createPipeline(VkRenderPass renderPass);
 
 private:

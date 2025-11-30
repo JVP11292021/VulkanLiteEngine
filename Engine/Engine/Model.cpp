@@ -59,13 +59,6 @@ void ShaderModel::Builder::loadModel(const std::string& filePath) {
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex{};
-		
-			if (index.texcoord_index >= 0)
-				vertex.uv = {
-					attrib.texcoords[2 * index.texcoord_index + 0],
-					attrib.texcoords[2 * index.texcoord_index + 1]
-				};
-
 
 			if (index.vertex_index >= 0) {
 				vertex.position = {

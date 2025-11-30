@@ -11,6 +11,8 @@
 #include <Camera.hpp>
 #include <HID.hpp>
 #include <Buffer.hpp>
+#include <Descriptors.hpp>
+#include <Utils.hpp>
 
 #include <chrono>
 #include <memory>
@@ -20,7 +22,7 @@
 
 struct GlobalUbo {
 	glm::mat4 projectionView{ 1.f };
-	glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f,-3.f,-2.f });
+	glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
 };
 
 class FirstApp {
@@ -29,6 +31,11 @@ public:
 	static constexpr std::int32_t HEIGHT = 600;
 
 	FirstApp() {
+		this->globalPool = vle::DescriptorPool::Builder(this->device)
+			.setMaxSets(vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT)
+			.build();
+
 		this->loadObjects();
 	}
 
@@ -49,9 +56,20 @@ public:
 			uboBuffers[i]->map();
 		}
 
-		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass() }; 
+		auto globalSetLayout = vle::DescriptorSetLayout::Builder(this->device)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.build();
+
+		std::vector<VkDescriptorSet> globalDescriptorSets(vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (std::int32_t i = 0; i < globalDescriptorSets.size(); i++) {
+			auto bufferInfo = uboBuffers[i]->descriptorInfo();
+			vle::DescriptorWriter(*globalSetLayout, *this->globalPool)
+				.writeBuffer(0, &bufferInfo)
+				.build(globalDescriptorSets[i]);
+		}
+
+		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 		vle::Camera camera{};
-		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(.0f, .5f, 2.5f));
 
 		auto viewerObject = vle::Object::create();
 		vle::KeyboardMovementController cameraController{};
@@ -63,6 +81,7 @@ public:
 			 
 			auto newTime = std::chrono::high_resolution_clock::now();
 			float frameTimeElapsed = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+			currentTime = newTime;
 
 			constexpr auto MAX_FRAME_TIME_ELAPSED = 10000.f;
 			frameTimeElapsed = glm::min(frameTimeElapsed, MAX_FRAME_TIME_ELAPSED);
@@ -79,14 +98,15 @@ public:
 					frameIndex,
 					frameTimeElapsed,
 					commandBuffer,
-					camera
+					camera,
+					globalDescriptorSets[frameIndex]
 				};
 
 				// Update Phase
 				GlobalUbo ubo{};
 				ubo.projectionView = camera.getProjection() * camera.getView();
-				uboBuffers[frameIndex]->writeToBuffer(&ubo, frameIndex);
-				uboBuffers[frameIndex]->flushIndex(frameIndex);
+				uboBuffers[frameIndex]->writeToBuffer(&ubo);
+				uboBuffers[frameIndex]->flush();
 
 				// Render Phase
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
@@ -101,12 +121,20 @@ public:
 private:
 
 	void loadObjects() {
-		std::shared_ptr<vle::ShaderModel> model = vle::ShaderModel::createModelFromFile(this->device, "models/flat_vase.obj");
-		auto centreObject = vle::Object::create();
-		centreObject.model = model;
-		centreObject.transform.translation = { .0f,.0f,2.5f };
-		centreObject.transform.scale = glm::vec3{ 3.f };
-		this->objects.push_back(std::move(centreObject));
+		std::shared_ptr<vle::ShaderModel> model =
+			vle::ShaderModel::createModelFromFile(this->device, "models/flat_vase.obj");
+		auto flatVase = vle::Object::create();
+		flatVase.model = model;
+		flatVase.transform.translation = { -.5f, .5f, 2.5f };
+		flatVase.transform.scale = { 3.f, 1.5f, 3.f };
+		this->objects.push_back(std::move(flatVase));
+
+		model = vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
+		auto smoothVase = vle::Object::create();
+		smoothVase.model = model;
+		smoothVase.transform.translation = { .5f, .5f, 2.5f };
+		smoothVase.transform.scale = { 3.f, 1.5f, 3.f };
+		this->objects.push_back(std::move(smoothVase));
 	}
 
 private:
@@ -114,6 +142,7 @@ private:
 	vle::EngineDevice device{ win };
 	Renderer renderer{ win, device };
 
+	std::unique_ptr<vle::DescriptorPool> globalPool{};
 	std::vector<vle::Object> objects;
 };
 
