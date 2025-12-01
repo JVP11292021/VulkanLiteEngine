@@ -7,6 +7,13 @@ VLE_NS_B
 
 class Camera {
 public:
+	Camera() = default;
+	~Camera() = default;
+
+	Camera(const Camera&) = default;
+	Camera& operator=(const Camera&) = default;
+
+public:
 	void setOrthoProjection(float left, float right, float top, float bottom, float near, float far);
 	void setPerspectiveProjection(float fovy, float aspect, float near, float far);
 

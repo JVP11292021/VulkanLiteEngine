@@ -124,15 +124,15 @@ private:
 		std::shared_ptr<vle::ShaderModel> model =
 			vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
 
-		const int rows = 100;        // number of objects on Y axis
-		const int cols = 100;        // number of objects on X axis
+		const int rows = 10;        // number of objects on Y axis
+		const int cols = 10;        // number of objects on X axis
 
 		const float startX = -1.0f;
 		const float startY = 0.5f;
 		const float zPos = 2.5f;
 
-		const float spacingX = 0.3f;
-		const float spacingY = 0.3f;
+		const float spacingX = 0.6f;
+		const float spacingY = 0.6f;
 
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < cols; x++) {

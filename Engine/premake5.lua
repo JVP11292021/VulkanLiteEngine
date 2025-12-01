@@ -1,6 +1,6 @@
 workspace "VleEngine"
 	architecture "x64"
-	startproject "SandboxApp"
+	startproject "Renderer"
 
 	configurations {
 		"Debug",
@@ -17,8 +17,8 @@ else
     print("[Engine] Using Vulkan SDK at: " .. vulkan_sdk)
 end
 
-project "Engine"
-	location "Engine"
+project "EngineBackend"
+	location "EngineBackend"
 	kind "staticlib"
 	language "C++"
 	cppdialect "C++17"
@@ -87,8 +87,8 @@ project "Engine"
 		optimize "on"
 		runtime "Release"
 
-project "SandboxApp"
-	location "SandboxApp"
+project "Renderer"
+	location "Renderer"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
