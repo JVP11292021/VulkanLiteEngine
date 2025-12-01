@@ -12,7 +12,7 @@
 #include <HID.hpp>
 #include <Buffer.hpp>
 #include <Descriptors.hpp>
-#include <Utils.hpp>
+#include <eutils.hpp>
 
 #include <chrono>
 #include <memory>

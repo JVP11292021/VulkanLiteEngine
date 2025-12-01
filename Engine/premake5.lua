@@ -17,8 +17,8 @@ else
     print("[Engine] Using Vulkan SDK at: " .. vulkan_sdk)
 end
 
-project "EngineBackend"
-	location "EngineBackend"
+project "EngineUtils"
+	location "EngineUtils"
 	kind "staticlib"
 	language "C++"
 	cppdialect "C++17"
@@ -39,12 +39,84 @@ project "EngineBackend"
 		"Libraries/include",
 	}
 
+	libdirs {}
+
+	links {}
+
+	defines {
+		"VLE_UTILS_BUILD_DLL",
+	}
+
+	if vulkan_sdk ~= nil then
+        includedirs {
+            vulkan_sdk .. "/Include"
+        }
+
+        libdirs {
+            vulkan_sdk .. "/Lib"
+        }
+
+        links {
+            "vulkan-1.lib"
+        }
+
+        defines {
+            "USE_VULKAN"
+        }
+    end
+
+	filter "system:windows"
+		systemversion "latest"
+
+	filter "configurations:Debug"
+		defines "VLE_DEBUG"
+		symbols "on"
+		runtime "Debug"
+
+	filter "configurations:Release"
+		defines "VLE_RELEASE"
+		optimize "on"
+		runtime "Release"
+
+	filter "configurations:Dist"
+		defines "VLE_DIST"
+		optimize "on"
+		runtime "Release"
+
+project "EngineBackend"
+	location "EngineBackend"
+	kind "staticlib"
+	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
+
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files {
+		"%{prj.name}/**.h",
+		"%{prj.name}/**.hpp",
+		"%{prj.name}/**.inl",
+		"%{prj.name}/**.cpp",
+		"%{prj.name}/**.c",
+	}
+
+	includedirs {
+		"Libraries/include",
+		"EngineUtils"
+	}
+
 	libdirs {
 		"Libraries/lib",
 	}
 
 	links {
-		"glfw3_mt.lib"
+		"glfw3_mt.lib",
+		"EngineUtils"
+	}
+
+	dependson { 
+		"EngineUtils" 
 	}
 
 	defines {
@@ -106,7 +178,8 @@ project "Renderer"
 
 	includedirs {
 		"Libraries/include",
-		"Engine",
+		"EngineBackend",
+		"EngineUtils"
 	}
 
 	libdirs {
@@ -114,7 +187,13 @@ project "Renderer"
 	}
 
 	links {
-		"Engine",
+		"EngineBackend",
+		"EngineUtils"
+	}
+
+	dependson { 
+		"EngineBackend", 
+		"EngineUtils" 
 	}
 
 	if vulkan_sdk ~= nil then

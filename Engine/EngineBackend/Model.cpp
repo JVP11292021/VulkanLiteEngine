@@ -1,7 +1,7 @@
 #include "Model.hpp"
 
-#include "Utils.hpp"
-#include "Helpers.hpp"
+#include <Hash.hpp>
+#include <VkHelpers.hpp>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
@@ -16,7 +16,7 @@ template<>
 struct hash<vle::ShaderModel::Vertex> {
 	size_t operator()(vle::ShaderModel::Vertex const& vertex) const {
 		size_t seed = 0;
-		vle::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+		vle::utils::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
 		return seed;
 	}
 };
@@ -34,7 +34,7 @@ std::vector<VkVertexInputBindingDescription> ShaderModel::Vertex::getBindingDesc
 }
 
 std::vector<VkVertexInputAttributeDescription> ShaderModel::Vertex::getAttributeDescription() {
-	return VertexAttributeBuilder{}
+	return vle::utils::VertexAttributeBuilder{}
 		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32B32_SFLOAT, &ShaderModel::Vertex::position)
 		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32B32_SFLOAT, &ShaderModel::Vertex::color)
 		.add<ShaderModel::Vertex>(VK_FORMAT_R32G32B32_SFLOAT, &ShaderModel::Vertex::normal)

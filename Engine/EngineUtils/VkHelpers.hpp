@@ -1,12 +1,17 @@
 #ifndef VLE_HELPERS_H
 #define VLE_HELPERS_H
 
-#include "defs.hpp"
+#if defined(USE_VULKAN)
+
+#include "UtilsDefs.hpp"
 
 #include <vector>
+#include <cinttypes>
 #include <vulkan/vulkan.h>
 
-VLE_NS_B
+#if defined(VULKAN_H_)
+
+VLE_UTILS_NS_B
 
 class VertexAttributeBuilder {
 public:
@@ -43,6 +48,9 @@ private:
     }
 };
 
-VLE_NS_E
+VLE_UTILS_NS_E
+
+#endif // VULKAN_H
+#endif // USE_VULKAN 
 
 #endif // VLE_HELPERS_H
