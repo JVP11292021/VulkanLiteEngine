@@ -7,10 +7,11 @@ VLE_NS_B
 // *************** Descriptor Set Layout Builder *********************
 
 DescriptorSetLayout::Builder& DescriptorSetLayout::Builder::addBinding(
-    uint32_t binding,
+    std::uint32_t binding,
     VkDescriptorType descriptorType,
     VkShaderStageFlags stageFlags,
-    uint32_t count) {
+    std::uint32_t count
+) {
     assert(this->_bindings.count(binding) == 0 && "Binding already in use");
     VkDescriptorSetLayoutBinding layoutBinding{};
     layoutBinding.binding = binding;
@@ -29,7 +30,7 @@ std::unique_ptr<DescriptorSetLayout> DescriptorSetLayout::Builder::build() const
 
 DescriptorSetLayout::DescriptorSetLayout(
     EngineDevice& device, 
-    std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings
+    std::unordered_map<std::uint32_t, VkDescriptorSetLayoutBinding> bindings
 )
     : _device{ device }, _bindings{ bindings } 
 {
@@ -40,7 +41,7 @@ DescriptorSetLayout::DescriptorSetLayout(
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
     descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
+    descriptorSetLayoutInfo.bindingCount = static_cast<std::uint32_t>(setLayoutBindings.size());
     descriptorSetLayoutInfo.pBindings = setLayoutBindings.data();
 
     if (vkCreateDescriptorSetLayout(this->_device.device(), &descriptorSetLayoutInfo, nullptr, &this->_descriptorSetLayout) != VK_SUCCESS) {
@@ -55,7 +56,7 @@ DescriptorSetLayout::~DescriptorSetLayout() {
 // *************** Descriptor Pool Builder *********************
 
 DescriptorPool::Builder& DescriptorPool::Builder::addPoolSize(
-    VkDescriptorType descriptorType, uint32_t count
+    VkDescriptorType descriptorType, std::uint32_t count
 ) {
     this->_poolSizes.push_back({ descriptorType, count });
     return *this;
@@ -66,7 +67,7 @@ DescriptorPool::Builder& DescriptorPool::Builder::setPoolFlags(
     this->_poolFlags = flags;
     return *this;
 }
-DescriptorPool::Builder& DescriptorPool::Builder::setMaxSets(uint32_t count) {
+DescriptorPool::Builder& DescriptorPool::Builder::setMaxSets(std::uint32_t count) {
     this->_maxSets = count;
     return *this;
 }
@@ -79,7 +80,7 @@ std::unique_ptr<DescriptorPool> DescriptorPool::Builder::build() const {
 
 DescriptorPool::DescriptorPool(
     EngineDevice& device,
-    uint32_t maxSets,
+    std::uint32_t maxSets,
     VkDescriptorPoolCreateFlags poolFlags,
     const std::vector<VkDescriptorPoolSize>& poolSizes
 )
@@ -87,7 +88,7 @@ DescriptorPool::DescriptorPool(
 {
     VkDescriptorPoolCreateInfo descriptorPoolInfo{};
     descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    descriptorPoolInfo.poolSizeCount = static_cast<std::uint32_t>(poolSizes.size());
     descriptorPoolInfo.pPoolSizes = poolSizes.data();
     descriptorPoolInfo.maxSets = maxSets;
     descriptorPoolInfo.flags = poolFlags;
@@ -120,7 +121,7 @@ void DescriptorPool::freeDescriptors(std::vector<VkDescriptorSet>& descriptors) 
     vkFreeDescriptorSets(
         this->_device.device(),
         this->_descriptorPool,
-        static_cast<uint32_t>(descriptors.size()),
+        static_cast<std::uint32_t>(descriptors.size()),
         descriptors.data());
 }
 
@@ -135,7 +136,7 @@ DescriptorWriter::DescriptorWriter(DescriptorSetLayout& setLayout, DescriptorPoo
 }
 
 DescriptorWriter& DescriptorWriter::writeBuffer(
-    uint32_t binding, VkDescriptorBufferInfo* bufferInfo)
+    std::uint32_t binding, VkDescriptorBufferInfo* bufferInfo)
 {
     assert(this->_setLayout._bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
@@ -157,7 +158,7 @@ DescriptorWriter& DescriptorWriter::writeBuffer(
 }
 
 DescriptorWriter& DescriptorWriter::writeImage(
-    uint32_t binding, VkDescriptorImageInfo* imageInfo) {
+    std::uint32_t binding, VkDescriptorImageInfo* imageInfo) {
     assert(this->_setLayout._bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
     auto& bindingDescription = this->_setLayout._bindings[binding];
