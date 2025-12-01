@@ -90,7 +90,7 @@ public:
 			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			auto aspect = this->renderer.getAspectRatio();
-			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f);
+			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 25.f);
 
 			if (auto commandBuffer = this->renderer.beginFrame()) {
 				std::int32_t frameIndex = this->renderer.getFrameIndex();
@@ -122,19 +122,35 @@ private:
 
 	void loadObjects() {
 		std::shared_ptr<vle::ShaderModel> model =
-			vle::ShaderModel::createModelFromFile(this->device, "models/flat_vase.obj");
-		auto flatVase = vle::Object::create();
-		flatVase.model = model;
-		flatVase.transform.translation = { -.5f, .5f, 2.5f };
-		flatVase.transform.scale = { 3.f, 1.5f, 3.f };
-		this->objects.push_back(std::move(flatVase));
+			vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
 
-		model = vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
-		auto smoothVase = vle::Object::create();
-		smoothVase.model = model;
-		smoothVase.transform.translation = { .5f, .5f, 2.5f };
-		smoothVase.transform.scale = { 3.f, 1.5f, 3.f };
-		this->objects.push_back(std::move(smoothVase));
+		const int rows = 100;        // number of objects on Y axis
+		const int cols = 100;        // number of objects on X axis
+
+		const float startX = -1.0f;
+		const float startY = 0.5f;
+		const float zPos = 2.5f;
+
+		const float spacingX = 0.3f;
+		const float spacingY = 0.3f;
+
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < cols; x++) {
+
+				auto obj = vle::Object::create();
+				obj.model = model;
+
+				obj.transform.translation = {
+					startX + x * spacingX,
+					startY + y * spacingY,
+					zPos
+				};
+
+				obj.transform.scale = { 3.f, 1.5f, 3.f };
+
+				this->objects.push_back(std::move(obj));
+			}
+		}
 	}
 
 private:
