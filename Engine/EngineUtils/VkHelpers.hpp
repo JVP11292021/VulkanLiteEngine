@@ -3,13 +3,14 @@
 
 #if defined(USE_VULKAN)
 
+#include <vulkan/vulkan.h>
+
+#if defined(VULKAN_H_)
+
 #include "UtilsDefs.hpp"
 
 #include <vector>
 #include <cinttypes>
-#include <vulkan/vulkan.h>
-
-#if defined(VULKAN_H_)
 
 VLE_UTILS_NS_B
 

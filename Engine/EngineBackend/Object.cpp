@@ -52,18 +52,18 @@ glm::mat3 Transform3dComponent::normalMatrix() {
 
 	return glm::mat3{
 		{
-			invScale.x* (c1 * c3 + s1 * s2 * s3),
-			invScale.x* (c2 * s3),
+			invScale.x * (c1 * c3 + s1 * s2 * s3),
+			invScale.x * (c2 * s3),
 			invScale.x * (c1 * s2 * s3 - c3 * s1)
 		},
 		{
-			invScale.y* (c3 * s1 * s2 - c1 * s3),
-			invScale.y* (c2 * c3),
+			invScale.y * (c3 * s1 * s2 - c1 * s3),
+			invScale.y * (c2 * c3),
 			invScale.y * (c1 * c3 * s2 + s1 * s3)
 		},
 		{
-			invScale.z* (c2 * s1),
-			invScale.z* (-s2),
+			invScale.z * (c2 * s1),
+			invScale.z * (-s2),
 			invScale.z * (c1 * c2)
 		}};
 }

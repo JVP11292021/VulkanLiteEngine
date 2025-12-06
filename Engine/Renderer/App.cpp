@@ -22,7 +22,10 @@
 
 struct GlobalUbo {
 	glm::mat4 projectionView{ 1.f };
-	glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+
+	glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, 0.2f };
+	glm::vec3 lightPosition{ -1.f };
+	alignas(16) glm::vec4 lightColor{ 1.f };
 };
 
 class FirstApp {
@@ -124,8 +127,8 @@ private:
 		std::shared_ptr<vle::ShaderModel> model =
 			vle::ShaderModel::createModelFromFile(this->device, "models/smooth_vase.obj");
 
-		const int rows = 10;        // number of objects on Y axis
-		const int cols = 10;        // number of objects on X axis
+		const int rows = 1;        // number of objects on Y axis
+		const int cols = 8;        // number of objects on X axis
 
 		const float startX = -1.0f;
 		const float startY = 0.5f;
@@ -151,6 +154,15 @@ private:
 				this->objects.push_back(std::move(obj));
 			}
 		}
+
+		std::shared_ptr<vle::ShaderModel> quadModel =
+			vle::ShaderModel::createModelFromFile(this->device, "models/quad.obj");
+		auto obj = vle::Object::create();
+		obj.model = quadModel;
+		obj.transform.translation = {0.f, .5f, 0.f};
+		obj.transform.scale = { 3.f, 1.0f, 3.f };
+		this->objects.push_back(std::move(obj));
+
 	}
 
 private:
