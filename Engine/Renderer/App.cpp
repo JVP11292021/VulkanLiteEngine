@@ -21,15 +21,6 @@
 #include <array>
 #include <vector>
 
-struct GlobalUbo {
-	glm::mat4 projection{ 1.f };
-	glm::mat4 view{ 1.f };
-
-	glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, 0.2f };
-	glm::vec3 lightPosition{ -1.f };
-	alignas(16) glm::vec4 lightColor{ 1.f };
-};
-
 class FirstApp {
 public:
 	static constexpr std::int32_t WIDTH = 800;
@@ -54,7 +45,7 @@ public:
 		for (std::int32_t i = 0; i < uboBuffers.size(); i++) {
 			uboBuffers[i] = std::make_unique<vle::Buffer>(
 				this->device,
-				sizeof(GlobalUbo),
+				sizeof(vle::GlobalUbo),
 				1,
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -110,9 +101,10 @@ public:
 				};
 
 				// Update Phase
-				GlobalUbo ubo{};
+				vle::GlobalUbo ubo{};
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
+				pointLigthSystem.update(frameInfo, ubo);
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
 
@@ -168,6 +160,26 @@ private:
 		obj.transform.translation = {0.f, .5f, 0.f};
 		obj.transform.scale = { 3.f, 1.0f, 3.f };
 		this->objects.emplace(obj.getId(), std::move(obj));
+
+		std::vector<glm::vec3> lightColors{
+			 {1.f, .1f, .1f},
+			 {.1f, .1f, 1.f},
+			 {.1f, 1.f, .1f},
+			 {1.f, 1.f, .1f},
+			 {.1f, 1.f, 1.f},
+			 {1.f, 1.f, 1.f}  //
+		};
+		
+		for (std::int32_t i = 0; i < lightColors.size(); i++) {
+			auto pointLight = vle::Object::createPointLight(1.f);
+			pointLight.color = lightColors[i];
+			auto rotHeight = glm::rotate(
+				glm::mat4(1.f), 
+				(i * glm::two_pi<float>()) / lightColors.size(),
+				{0.f, 1.f, 0.f});
+			pointLight.transform.translation = glm::vec3(rotHeight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+			this->objects.emplace(pointLight.getId(), std::move(pointLight));
+		}
 
 	}
 

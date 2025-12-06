@@ -1,5 +1,11 @@
 #include "PointLightSystem.hpp"
 
+struct PointLightPushConstant {
+	glm::vec4 position{};
+	glm::vec4 color{};
+	float radius;
+};
+
 PointLightSystem::PointLightSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
 	: device(device)
 {
@@ -9,6 +15,27 @@ PointLightSystem::PointLightSystem(vle::EngineDevice& device, VkRenderPass rende
 
 PointLightSystem::~PointLightSystem() {
 	vkDestroyPipelineLayout(this->device.device(), this->pipelineLayout, nullptr);
+}
+
+void PointLightSystem::update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo) {
+	auto rotHeight = glm::rotate(
+		glm::mat4(1.f),
+		frameInfo.frameTime,
+		{ 0.f, 1.f, 0.f });
+
+	std::int32_t lightIndex = 0;
+	for (auto& kv : frameInfo.gameObjects) {
+		auto& obj = kv.second;
+		if (!obj.pointLight) continue;
+
+		obj.transform.translation = glm::vec3(rotHeight * glm::vec4(obj.transform.translation, 1.f));
+
+		ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
+		ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+		lightIndex++;
+	}
+
+	ubo.numLights = lightIndex;
 }
 
 void PointLightSystem::render(vle::FrameInfo& frameInfo) {
@@ -22,16 +49,33 @@ void PointLightSystem::render(vle::FrameInfo& frameInfo) {
 		&frameInfo.globalDescriptorSet,
 		0, nullptr);
 
-	vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+	for (auto& kv : frameInfo.gameObjects) {
+		auto& obj = kv.second;
+		if (!obj.pointLight) continue;
+		
+		PointLightPushConstant push{};
+		push.position = glm::vec4(obj.transform.translation, 1.f);
+		push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+		push.radius = obj.transform.scale.x;
+
+		vkCmdPushConstants(
+			frameInfo.commandBuffer,
+			this->pipelineLayout,
+			VLE_PUSH_CONST_VERT_FRAG_FLAG,
+			0,
+			sizeof(PointLightPushConstant),
+			&push);
+		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+	}
 
 }
 
 void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
 
-	//VkPushConstantRange pushConstantRange{};
-	//pushConstantRange.stageFlags = VLE_PUSH_CONST_VERT_FRAG_FLAG;
-	//pushConstantRange.offset = 0;
-	//pushConstantRange.size = sizeof(SimplePushConstantData);
+	VkPushConstantRange pushConstantRange{};
+	pushConstantRange.stageFlags = VLE_PUSH_CONST_VERT_FRAG_FLAG;
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof(PointLightPushConstant);
 
 	std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
 
@@ -39,8 +83,8 @@ void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayou
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = static_cast<std::uint32_t>(descriptorSetLayouts.size());
 	pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
-	pipelineLayoutInfo.pPushConstantRanges = nullptr;
+	pipelineLayoutInfo.pushConstantRangeCount = 1;
+	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 	if (vkCreatePipelineLayout(this->device.device(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create pipeline layout");

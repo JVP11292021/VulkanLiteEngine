@@ -23,6 +23,7 @@ public:
 	PointLightSystem(const PointLightSystem&) = delete;
 	PointLightSystem& operator=(const PointLightSystem&) = delete;
 
+	void update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo);
 	void render(vle::FrameInfo& frameInfo);
 
 private:

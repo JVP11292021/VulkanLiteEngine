@@ -68,4 +68,13 @@ glm::mat3 Transform3dComponent::normalMatrix() {
 		}};
 }
 
+Object Object::createPointLight(float intensity, float radius, glm::vec3 color) {
+	Object obj = Object::create();
+	obj.color = color;
+	obj.transform.scale.x = radius;
+	obj.pointLight = std::make_unique<PointLightComponent3D>();
+	obj.pointLight->lightIntensity = intensity;
+	return obj;
+}
+
 VLE_NS_E

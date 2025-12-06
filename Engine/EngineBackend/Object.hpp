@@ -34,12 +34,18 @@ struct Transform3dComponent {
 	glm::mat3 normalMatrix();
 };
 
+struct PointLightComponent3D {
+	float lightIntensity = 1.0f;
+};
+
 class Object {
 public:
 	static Object create() {
 		static id_t currentId = 0;
 		return Object(currentId++);
 	}
+
+	static Object createPointLight(float intensity = 10.f, float radius = .1f, glm::vec3 color = glm::vec3(1.f));
 
 	inline id_t getId() const { return this->_id; }
 
@@ -49,10 +55,12 @@ public:
 	Object& operator=(Object&&) = default;
 
 public:
-	std::shared_ptr<ShaderModel> model{};
 	glm::vec3 color{};
 	Transform3dComponent transform;
 
+	// OPtional: pointer types
+	std::shared_ptr<ShaderModel> model{};
+	std::unique_ptr<PointLightComponent3D> pointLight = nullptr;
 private:
 	Object(id_t objId) : _id(objId) {}
 
