@@ -23,10 +23,12 @@ public:
 
 	inline const glm::mat4& getProjection() const { return this->_projectionMatrix; }
 	inline const glm::mat4& getView() const { return this->_viewMatrix; }
+	inline const glm::mat4& getImverseView() const { return this->_inverseViewMatrix; }
 
 public:
 	glm::mat4 _projectionMatrix{ 1.f };
 	glm::mat4 _viewMatrix{ 1.f };
+	glm::mat4 _inverseViewMatrix{ 1.f };
 };
 
 VLE_NS_E

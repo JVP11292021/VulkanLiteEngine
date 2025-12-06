@@ -104,6 +104,7 @@ public:
 				vle::GlobalUbo ubo{};
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
+				ubo.inverseView = camera.getImverseView();
 				pointLigthSystem.update(frameInfo, ubo);
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
