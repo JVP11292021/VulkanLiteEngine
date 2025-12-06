@@ -16,7 +16,7 @@ SimpleRenderSystem::~SimpleRenderSystem() {
 	vkDestroyPipelineLayout(this->device.device(), this->pipelineLayout, nullptr);
 }
 
-void SimpleRenderSystem::renderGameObjects(vle::FrameInfo& frameInfo, std::vector<vle::Object>& objects) {
+void SimpleRenderSystem::renderGameObjects(vle::FrameInfo& frameInfo) {
 	this->pipeline->bind(frameInfo.commandBuffer);
 
 	vkCmdBindDescriptorSets(
@@ -27,7 +27,9 @@ void SimpleRenderSystem::renderGameObjects(vle::FrameInfo& frameInfo, std::vecto
 		&frameInfo.globalDescriptorSet,
 		0, nullptr );
 
-	for (auto& obj : objects) {
+	for (auto& kv: frameInfo.gameObjects) {
+		vle::Object& obj = kv.second;
+		if (!obj.model) continue;
 		SimplePushConstantData push{};
 		push.modelMatrix = obj.transform.mat4();
 		push.normalMatrix = obj.transform.normalMatrix();

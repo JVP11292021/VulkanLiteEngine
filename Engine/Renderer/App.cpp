@@ -60,7 +60,7 @@ public:
 		}
 
 		auto globalSetLayout = vle::DescriptorSetLayout::Builder(this->device)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(vle::EngineSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -102,7 +102,8 @@ public:
 					frameTimeElapsed,
 					commandBuffer,
 					camera,
-					globalDescriptorSets[frameIndex]
+					globalDescriptorSets[frameIndex],
+					this->objects
 				};
 
 				// Update Phase
@@ -113,7 +114,7 @@ public:
 
 				// Render Phase
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(frameInfo, this->objects);
+				simpleRenderSystem.renderGameObjects(frameInfo);
 				this->renderer.endSwapChainRenderPass(commandBuffer);
 				this->renderer.endFrame();
 			}
@@ -151,7 +152,7 @@ private:
 
 				obj.transform.scale = { 3.f, 1.5f, 3.f };
 
-				this->objects.push_back(std::move(obj));
+				this->objects.emplace(obj.getId(), std::move(obj));
 			}
 		}
 
@@ -161,7 +162,7 @@ private:
 		obj.model = quadModel;
 		obj.transform.translation = {0.f, .5f, 0.f};
 		obj.transform.scale = { 3.f, 1.0f, 3.f };
-		this->objects.push_back(std::move(obj));
+		this->objects.emplace(obj.getId(), std::move(obj));
 
 	}
 
@@ -171,7 +172,7 @@ private:
 	Renderer renderer{ win, device };
 
 	std::unique_ptr<vle::DescriptorPool> globalPool{};
-	std::vector<vle::Object> objects;
+	vle::ObjectMap objects;
 };
 
 int main() {

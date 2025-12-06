@@ -3,6 +3,7 @@
 
 #include "defs.hpp"
 #include "Camera.hpp"
+#include "Object.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -14,6 +15,7 @@ struct FrameInfo {
 	VkCommandBuffer commandBuffer;
 	Camera& camera;
 	VkDescriptorSet globalDescriptorSet;
+	ObjectMap& gameObjects;
 };
 
 VLE_NS_E

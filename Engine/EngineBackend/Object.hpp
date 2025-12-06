@@ -5,11 +5,15 @@
 
 #include "Model.hpp"
 #include <memory>
+#include <map>
 #include <glm/gtc/matrix_transform.hpp>
 
 VLE_NS_B
 
+class Object;
+
 using id_t = unsigned int;
+using ObjectMap = std::map<id_t, Object>;
 
 struct Transform2dComponent {
 	glm::vec2 translation{};

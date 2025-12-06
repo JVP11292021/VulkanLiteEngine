@@ -23,7 +23,7 @@ public:
 	SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 	SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-	void renderGameObjects(vle::FrameInfo& frameInfo, std::vector<vle::Object>& objects);
+	void renderGameObjects(vle::FrameInfo& frameInfo);
 
 private:
 	void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
