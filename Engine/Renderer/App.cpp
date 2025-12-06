@@ -2,6 +2,7 @@
 
 #include "Renderer.hpp"
 #include "RenderSystem.hpp"
+#include "PointLightSystem.hpp"
 
 #include <Device.hpp>
 #include <defs.hpp>
@@ -21,7 +22,8 @@
 #include <vector>
 
 struct GlobalUbo {
-	glm::mat4 projectionView{ 1.f };
+	glm::mat4 projection{ 1.f };
+	glm::mat4 view{ 1.f };
 
 	glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, 0.2f };
 	glm::vec3 lightPosition{ -1.f };
@@ -72,6 +74,7 @@ public:
 		}
 
 		SimpleRenderSystem simpleRenderSystem{ this->device, this->renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+		PointLightSystem pointLigthSystem{ this->device, this->renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
 		vle::Camera camera{};
 
 		auto viewerObject = vle::Object::create();
@@ -108,13 +111,15 @@ public:
 
 				// Update Phase
 				GlobalUbo ubo{};
-				ubo.projectionView = camera.getProjection() * camera.getView();
+				ubo.projection = camera.getProjection();
+				ubo.view = camera.getView();
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
 
 				// Render Phase
 				this->renderer.beginSwapChainRenderPass(commandBuffer);
 				simpleRenderSystem.renderGameObjects(frameInfo);
+				pointLigthSystem.render(frameInfo);
 				this->renderer.endSwapChainRenderPass(commandBuffer);
 				this->renderer.endFrame();
 			}

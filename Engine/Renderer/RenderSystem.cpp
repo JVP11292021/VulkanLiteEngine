@@ -67,6 +67,8 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 	vle::PipelineConfigInfo pipelineConfig{};
 	vle::Pipeline::defaultPipelineConfigInfo(
 		pipelineConfig);
+	pipelineConfig.bindingDescriptions = vle::ShaderModel::Vertex::getBindingDescription();
+	pipelineConfig.attributeDescriptors = vle::ShaderModel::Vertex::getAttributeDescription();
 	pipelineConfig.renderPass = renderPass;
 	pipelineConfig.pipelineLayout = this->pipelineLayout;
 	this->pipeline = std::make_unique<vle::Pipeline>(device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", pipelineConfig);

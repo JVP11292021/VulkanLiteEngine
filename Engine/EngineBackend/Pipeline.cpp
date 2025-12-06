@@ -135,8 +135,9 @@ void Pipeline::createGfxPipeline(const std::string& vertFilePath, const std::str
 	shaderStages[1].module = this->_fragShaderModule;
 	shaderStages[1].pName = "main";
 	
-	auto bindingDescriptions = ShaderModel::Vertex::getBindingDescription();
-	auto attributeDescriptions = ShaderModel::Vertex::getAttributeDescription();
+	// TODO this is hardcoded to use the shadermodel, but some piplines don't need layouts
+	auto& bindingDescriptions = configInfo.bindingDescriptions;
+	auto& attributeDescriptions = configInfo.attributeDescriptors;
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
