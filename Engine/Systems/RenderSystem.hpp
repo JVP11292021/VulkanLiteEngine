@@ -1,37 +1,71 @@
-#ifndef APP_VLE_RENDER_SYSTEM_H
-#define APP_VLE_RENDER_SYSTEM_H
+#ifndef VLE_RENDER_SYSTEM_PARENT_H
+#define VLE_RENDER_SYSTEM_PARENT_H
 
 #include "engdefs.hpp"
 
-#include <iostream>
-
 #include <Device.hpp>
 #include <defs.hpp>
+#include <Window.hpp>
+#include <SwapChain.hpp>
 #include <Pipeline.hpp>
-#include <Object.hpp>
-#include <Camera.hpp>
 #include <FrameInfo.hpp>
 
-#include <array>
+#include <type_traits>
 
 VLE_SYS_NS_B
 
-class SimpleRenderSystem {
+struct EmptyPush {};
+
+template <typename PushConstant = EmptyPush>
+class RenderSystem {
 public:
+	RenderSystem(vle::EngineDevice& device, VkDescriptorSetLayout globalSetLayout) 
+		: device(device) 
+	{
+		this->createPipelineLayout(globalSetLayout);
+	}
+	virtual ~RenderSystem() {
+		vkDestroyPipelineLayout(this->device.device(), this->pipelineLayout, nullptr);
+	};
 
-	SimpleRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
-	~SimpleRenderSystem();
+	RenderSystem(const RenderSystem&) = delete;
+	RenderSystem& operator=(const RenderSystem&) = delete;
 
-	SimpleRenderSystem(const SimpleRenderSystem&) = delete;
-	SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
+public:
+	virtual void update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo) = 0;
+	virtual void render(vle::FrameInfo& frameInfo) = 0;
 
-	void renderGameObjects(vle::FrameInfo& frameInfo);
+protected:
+	void createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
+		std::vector<VkDescriptorSetLayout> layouts{ globalSetLayout };
 
-private:
-	void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
-	void createPipeline(VkRenderPass renderPass);
+		VkPushConstantRange pushRange{};
+		pushRange.stageFlags = VLE_PUSH_CONST_VERT_FRAG_FLAG;
+		pushRange.offset = 0;
+		pushRange.size = sizeof(PushConstant);
 
-private:
+		VkPipelineLayoutCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		info.setLayoutCount = static_cast<std::uint32_t>(layouts.size());
+		info.pSetLayouts = layouts.data();
+
+		if constexpr (std::is_same_v<PushConstant, EmptyPush>) {
+			info.pushConstantRangeCount = 0;
+			info.pPushConstantRanges = nullptr;
+		}
+		else {
+			info.pushConstantRangeCount = 1;
+			info.pPushConstantRanges = &pushRange;
+		}
+
+		if (vkCreatePipelineLayout(this->device.device(), &info, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create pipeline layout");
+		}
+	}
+
+	virtual void createPipeline(VkRenderPass renderPass) = 0;
+	
+protected:
 	vle::EngineDevice& device;
 	std::unique_ptr<vle::Pipeline> pipeline;
 	VkPipelineLayout pipelineLayout;
@@ -39,4 +73,4 @@ private:
 
 VLE_SYS_NS_E
 
-#endif // APP_VLE_RENDER_SYSTEM_H
+#endif // VLE_RENDER_SYSTEM_PARENT_H

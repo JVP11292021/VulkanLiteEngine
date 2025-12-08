@@ -1,5 +1,5 @@
-#ifndef APP_VLE_RENDERER_H
-#define APP_VLE_RENDERER_H
+#ifndef VLE_RENDERER_H
+#define VLE_RENDERER_H
 
 #include <iostream>
 
@@ -56,4 +56,4 @@ private:
 
 VLE_SYS_NS_E
 
-#endif //APP_VLE_RENDERER_H
+#endif // VLE_RENDERER_H

@@ -2,21 +2,10 @@
 
 VLE_SYS_NS_B
 
-struct PointLightPushConstant {
-	glm::vec4 position{};
-	glm::vec4 color{};
-	float radius;
-};
-
 PointLightSystem::PointLightSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
-	: device(device)
+	: Base(device, globalSetLayout)
 {
-	this->createPipelineLayout(globalSetLayout);
 	this->createPipeline(renderPass);
-}
-
-PointLightSystem::~PointLightSystem() {
-	vkDestroyPipelineLayout(this->device.device(), this->pipelineLayout, nullptr);
 }
 
 void PointLightSystem::update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo) {
@@ -70,27 +59,6 @@ void PointLightSystem::render(vle::FrameInfo& frameInfo) {
 		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
 	}
 
-}
-
-void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
-
-	VkPushConstantRange pushConstantRange{};
-	pushConstantRange.stageFlags = VLE_PUSH_CONST_VERT_FRAG_FLAG;
-	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(PointLightPushConstant);
-
-	std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
-
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = static_cast<std::uint32_t>(descriptorSetLayouts.size());
-	pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
-	pipelineLayoutInfo.pushConstantRangeCount = 1;
-	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-
-	if (vkCreatePipelineLayout(this->device.device(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create pipeline layout");
-	}
 }
 
 void PointLightSystem::createPipeline(VkRenderPass renderPass) {

@@ -1,7 +1,8 @@
-#ifndef APP_VLE_POINT_LIGHT_SYSTEM_H
-#define APP_VLE_POINT_LIGHT_SYSTEM_H
+#ifndef VLE_POINT_LIGHT_SYSTEM_H
+#define VLE_POINT_LIGHT_SYSTEM_H
 
 #include "engdefs.hpp"
+#include "RenderSystem.hpp"
 
 #include <iostream>
 
@@ -15,28 +16,28 @@
 
 VLE_SYS_NS_B
 
-class PointLightSystem {
-public:
+struct PointLightPushConstant {
+	glm::vec4 position{};
+	glm::vec4 color{};
+	float radius;
+};
 
+class PointLightSystem : public RenderSystem<PointLightPushConstant> {
+public:
+	using Base = RenderSystem<PointLightPushConstant>;
 	PointLightSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
-	~PointLightSystem();
 
 	PointLightSystem(const PointLightSystem&) = delete;
 	PointLightSystem& operator=(const PointLightSystem&) = delete;
 
-	void update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo);
-	void render(vle::FrameInfo& frameInfo);
+public:
+	void update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo) override;
+	void render(vle::FrameInfo& frameInfo) override;
 
 private:
-	void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
-	void createPipeline(VkRenderPass renderPass);
-
-private:
-	vle::EngineDevice& device;
-	std::unique_ptr<vle::Pipeline> pipeline;
-	VkPipelineLayout pipelineLayout;
+	void createPipeline(VkRenderPass renderPass) override;
 };
 
 VLE_SYS_NS_E
 
-#endif // APP_VLE_POINT_LIGHT_SYSTEM_H
+#endif // VLE_POINT_LIGHT_SYSTEM_H
