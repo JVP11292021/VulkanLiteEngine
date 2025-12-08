@@ -2,6 +2,8 @@
 
 #include <array>
 
+VLE_SYS_NS_B
+
 Renderer::Renderer(vle::EngineWindow& win, vle::EngineDevice& device) 
 	: win(win), device(device), currentImageIndex(0), currentFrameIndex(0), isFrameStarted(false)
 {
@@ -145,3 +147,5 @@ void Renderer::recreateSwapChain() {
 	
 	}
 }
+
+VLE_SYS_NS_E

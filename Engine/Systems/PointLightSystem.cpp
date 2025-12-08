@@ -1,5 +1,7 @@
 #include "PointLightSystem.hpp"
 
+VLE_SYS_NS_B
+
 struct PointLightPushConstant {
 	glm::vec4 position{};
 	glm::vec4 color{};
@@ -101,3 +103,5 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 	pipelineConfig.pipelineLayout = this->pipelineLayout;
 	this->pipeline = std::make_unique<vle::Pipeline>(device, "shaders/point_light.vert.spv", "shaders/point_light.frag.spv", pipelineConfig);
 }
+
+VLE_SYS_NS_E

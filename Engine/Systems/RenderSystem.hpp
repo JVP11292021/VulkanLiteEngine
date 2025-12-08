@@ -1,6 +1,8 @@
 #ifndef APP_VLE_RENDER_SYSTEM_H
 #define APP_VLE_RENDER_SYSTEM_H
 
+#include "engdefs.hpp"
+
 #include <iostream>
 
 #include <Device.hpp>
@@ -10,9 +12,9 @@
 #include <Camera.hpp>
 #include <FrameInfo.hpp>
 
-#include <memory>
-#include <stdexcept>
 #include <array>
+
+VLE_SYS_NS_B
 
 class SimpleRenderSystem {
 public:
@@ -35,5 +37,6 @@ private:
 	VkPipelineLayout pipelineLayout;
 };
 
+VLE_SYS_NS_E
 
 #endif // APP_VLE_RENDER_SYSTEM_H

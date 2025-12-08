@@ -1,5 +1,7 @@
 #include "RenderSystem.hpp"
 
+VLE_SYS_NS_B
+
 struct SimplePushConstantData {
 	glm::mat4 modelMatrix{ 1.f };
 	glm::mat4 normalMatrix{ 1.f };
@@ -73,3 +75,5 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 	pipelineConfig.pipelineLayout = this->pipelineLayout;
 	this->pipeline = std::make_unique<vle::Pipeline>(device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", pipelineConfig);
 }
+
+VLE_SYS_NS_E

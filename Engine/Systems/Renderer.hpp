@@ -3,14 +3,14 @@
 
 #include <iostream>
 
+#include "engdefs.hpp"
+
 #include <Device.hpp>
 #include <defs.hpp>
 #include <Window.hpp>
 #include <SwapChain.hpp>
 
-#include <memory>
-#include <stdexcept>
-#include <cassert>
+VLE_SYS_NS_B
 
 class Renderer {
 public:
@@ -53,5 +53,7 @@ private:
 	std::int32_t currentFrameIndex;
 	bool isFrameStarted;
 };
+
+VLE_SYS_NS_E
 
 #endif //APP_VLE_RENDERER_H
