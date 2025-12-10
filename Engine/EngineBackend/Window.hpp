@@ -24,6 +24,8 @@ public:
 	inline bool wasWindowResized() const { return this->_frameBufferResized; }
 	inline void resetWindowResized() { this->_frameBufferResized = false; }
 	inline GLFWwindow* getGLFWwindow() const { return this->_win; }
+	inline std::int32_t getWidth() const { return this->_width; }
+	inline std::int32_t getHeight() const { return this->_height; }
 
 public:
 	void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
