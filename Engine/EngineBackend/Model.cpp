@@ -17,14 +17,14 @@
 #include <memory>
 
 namespace std {
-template<>
-struct hash<vle::ShaderModel::Vertex> {
-	size_t operator()(vle::ShaderModel::Vertex const& vertex) const {
-		size_t seed = 0;
-		vle::utils::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
-		return seed;
-	}
-};
+	template<>
+	struct hash<vle::ShaderModel::Vertex> {
+		size_t operator()(vle::ShaderModel::Vertex const& vertex) const {
+			size_t seed = 0;
+			vle::utils::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+			return seed;
+		}
+	};
 } // End namespace std
 
 VLE_NS_B
@@ -223,7 +223,7 @@ ShaderModel::~ShaderModel() {}
 
 
 void ShaderModel::bind(VkCommandBuffer commandBuffer) {
-	VkBuffer buffers[] = { this->_vertexBuffer->getBuffer()};
+	VkBuffer buffers[] = { this->_vertexBuffer->getBuffer() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
@@ -256,7 +256,7 @@ void ShaderModel::createVertexBuffers(const std::vector<Vertex>& vertices) {
 		vertexSize,
 		this->_vertexCount,
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 	stagingBuffer.map();
 	stagingBuffer.writeToBuffer((void*)vertices.data());
