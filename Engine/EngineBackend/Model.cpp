@@ -122,48 +122,108 @@ class PLYImporter : public Importer {
 		for (unsigned int m = 0; m < scene->mNumMeshes; ++m) {
 			aiMesh* mesh = scene->mMeshes[m];
 
+			uint32_t vertexOffset = static_cast<uint32_t>(vertices.size());
+
+			// Add vertices
 			for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
-				ShaderModel::Vertex vertex{};
-				vertex.position = {
-					mesh->mVertices[i].x,
-					mesh->mVertices[i].y,
-					mesh->mVertices[i].z
-				};
+				ShaderModel::Vertex v{};
+				v.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 
 				if (mesh->HasNormals()) {
-					vertex.normal = {
-						mesh->mNormals[i].x,
-						mesh->mNormals[i].y,
-						mesh->mNormals[i].z
-					};
+					v.normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+				}
+
+				if (mesh->HasTextureCoords(0)) {
+					v.uv = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 				}
 
 				if (mesh->HasVertexColors(0)) {
-					vertex.color = {
+					v.color = {
 						mesh->mColors[0][i].r,
 						mesh->mColors[0][i].g,
 						mesh->mColors[0][i].b
 					};
 				}
 
+				vertices.push_back(v);
+			}
+
+			// Add indices
+			for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
+				const aiFace& face = mesh->mFaces[f];
+				for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+					indices.push_back(vertexOffset + face.mIndices[j]);
+				}
+			}
+		}
+
+		return { vertices, indices };
+	}
+};
+
+class GLTFImporter : public Importer {
+public:
+	ModelPair loadObject(const std::string& filePath) override {
+		Assimp::Importer importer;
+
+		const aiScene* scene = importer.ReadFile(
+			filePath,
+			aiProcess_Triangulate |
+			aiProcess_GenSmoothNormals |
+			aiProcess_CalcTangentSpace |
+			aiProcess_JoinIdenticalVertices |
+			aiProcess_FlipUVs
+		);
+
+		if (!scene || !scene->HasMeshes()) {
+			throw std::runtime_error("Failed to load glTF: " + filePath);
+		}
+
+		std::vector<ShaderModel::Vertex> vertices;
+		std::vector<uint32_t> indices;
+		std::unordered_map<ShaderModel::Vertex, uint32_t> uniqueVertices;
+
+		for (uint32_t m = 0; m < scene->mNumMeshes; ++m) {
+			aiMesh* mesh = scene->mMeshes[m];
+
+			for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
+				ShaderModel::Vertex v{};
+
+				v.position = {
+					mesh->mVertices[i].x,
+					mesh->mVertices[i].y,
+					mesh->mVertices[i].z
+				};
+
+				if (mesh->HasNormals()) {
+					v.normal = {
+						mesh->mNormals[i].x,
+						mesh->mNormals[i].y,
+						mesh->mNormals[i].z
+					};
+				}
+
 				if (mesh->HasTextureCoords(0)) {
-					vertex.uv = {
+					v.uv = {
 						mesh->mTextureCoords[0][i].x,
 						mesh->mTextureCoords[0][i].y
 					};
 				}
 
-				if (uniqueVertices.count(vertex) == 0) {
-					uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
-					vertices.push_back(vertex);
+				if (mesh->HasVertexColors(0)) {
+					v.color = {
+						mesh->mColors[0][i].r,
+						mesh->mColors[0][i].g,
+						mesh->mColors[0][i].b
+					};
 				}
-			}
 
-			for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
-				const aiFace& face = mesh->mFaces[f];
-				for (unsigned int j = 0; j < face.mNumIndices; ++j) {
-					indices.push_back(uniqueVertices[vertices[face.mIndices[j]]]);
+				if (uniqueVertices.count(v) == 0) {
+					uniqueVertices[v] = static_cast<uint32_t>(vertices.size());
+					vertices.push_back(v);
 				}
+
+				indices.push_back(uniqueVertices[v]);
 			}
 		}
 
@@ -176,12 +236,12 @@ std::shared_ptr<Importer> make_importer(const std::string& filePath) {
 	if (extPos == std::string::npos) throw std::runtime_error("Model file has no extension!");
 	std::string ext = filePath.substr(extPos + 1);
 
-	if (ext == "obj") {
+	if (ext == "obj")
 		return std::make_shared<OBJImporter>();
-	}
-	else if (ext == "ply") {
+	else if (ext == "ply")
 		return std::make_shared<PLYImporter>();
-	}
+	else if (ext == "gltf" || ext == "glb")
+		return std::make_shared<GLTFImporter>();
 
 	throw std::runtime_error("Unsupported model format: " + ext);
 }
