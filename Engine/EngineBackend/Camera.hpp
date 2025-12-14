@@ -5,6 +5,7 @@
 
 VLE_NS_B
 
+// This camera class is nothing more than a matrix builder
 class Camera {
 public:
 	Camera() = default;

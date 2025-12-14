@@ -3,6 +3,10 @@
 #include <Hash.hpp>
 #include <VkHelpers.hpp>
 
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -10,6 +14,7 @@
 
 #include <cstring>
 #include <unordered_map>
+#include <memory>
 
 namespace std {
 template<>
@@ -23,6 +28,163 @@ struct hash<vle::ShaderModel::Vertex> {
 } // End namespace std
 
 VLE_NS_B
+
+class Importer {
+public:
+	using ModelPair = std::pair < std::vector<ShaderModel::Vertex>, std::vector<std::uint32_t>>;
+
+	Importer() {}
+	virtual ~Importer() {}
+
+public:
+	virtual ModelPair loadObject(const std::string& filePath) = 0;
+};
+
+class OBJImporter : public Importer {
+public:
+	ModelPair loadObject(const std::string& filePath) override {
+		tinyobj::attrib_t attrib;
+		std::vector<tinyobj::shape_t> shapes;
+		std::vector<tinyobj::material_t> materials;
+		std::string warn, err;
+
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
+			throw std::runtime_error(warn + err);
+		}
+
+		std::vector<ShaderModel::Vertex> vertices;
+		std::vector<std::uint32_t> indices;
+		std::unordered_map<ShaderModel::Vertex, std::uint32_t> uniqueVertices;
+
+		for (const auto& shape : shapes) {
+			for (const auto& index : shape.mesh.indices) {
+				ShaderModel::Vertex vertex{};
+
+				if (index.vertex_index >= 0) {
+					vertex.position = {
+						attrib.vertices[3 * index.vertex_index + 0],
+						attrib.vertices[3 * index.vertex_index + 1],
+						attrib.vertices[3 * index.vertex_index + 2],
+					};
+					vertex.color = {
+						attrib.colors[3 * index.vertex_index + 0],
+						attrib.colors[3 * index.vertex_index + 1],
+						attrib.colors[3 * index.vertex_index + 2],
+					};
+				}
+
+				if (index.normal_index >= 0) {
+					vertex.normal = {
+						attrib.normals[3 * index.normal_index + 0],
+						attrib.normals[3 * index.normal_index + 1],
+						attrib.normals[3 * index.normal_index + 2],
+					};
+				}
+
+				if (index.texcoord_index >= 0) {
+					vertex.uv = {
+						attrib.texcoords[2 * index.texcoord_index + 0],
+						attrib.texcoords[2 * index.texcoord_index + 1],
+					};
+				}
+
+				if (uniqueVertices.count(vertex) == 0) {
+					uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
+					vertices.push_back(vertex);
+				}
+
+				indices.push_back(uniqueVertices[vertex]);
+			}
+		}
+
+		return { vertices, indices };
+	}
+};
+
+class PLYImporter : public Importer {
+	ModelPair loadObject(const std::string& filePath) override {
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(filePath,
+			aiProcess_Triangulate |
+			aiProcess_GenSmoothNormals |
+			aiProcess_FlipUVs |
+			aiProcess_JoinIdenticalVertices
+		);
+
+		if (!scene || !scene->HasMeshes()) {
+			throw std::runtime_error("Failed to load model using Assimp: " + filePath);
+		}
+
+		std::vector<ShaderModel::Vertex> vertices;
+		std::vector<std::uint32_t> indices;
+		std::unordered_map<ShaderModel::Vertex, std::uint32_t> uniqueVertices;
+
+		for (unsigned int m = 0; m < scene->mNumMeshes; ++m) {
+			aiMesh* mesh = scene->mMeshes[m];
+
+			for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+				ShaderModel::Vertex vertex{};
+				vertex.position = {
+					mesh->mVertices[i].x,
+					mesh->mVertices[i].y,
+					mesh->mVertices[i].z
+				};
+
+				if (mesh->HasNormals()) {
+					vertex.normal = {
+						mesh->mNormals[i].x,
+						mesh->mNormals[i].y,
+						mesh->mNormals[i].z
+					};
+				}
+
+				if (mesh->HasVertexColors(0)) {
+					vertex.color = {
+						mesh->mColors[0][i].r,
+						mesh->mColors[0][i].g,
+						mesh->mColors[0][i].b
+					};
+				}
+
+				if (mesh->HasTextureCoords(0)) {
+					vertex.uv = {
+						mesh->mTextureCoords[0][i].x,
+						mesh->mTextureCoords[0][i].y
+					};
+				}
+
+				if (uniqueVertices.count(vertex) == 0) {
+					uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
+					vertices.push_back(vertex);
+				}
+			}
+
+			for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
+				const aiFace& face = mesh->mFaces[f];
+				for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+					indices.push_back(uniqueVertices[vertices[face.mIndices[j]]]);
+				}
+			}
+		}
+
+		return { vertices, indices };
+	}
+};
+
+std::shared_ptr<Importer> make_importer(const std::string& filePath) {
+	auto extPos = filePath.find_last_of('.');
+	if (extPos == std::string::npos) throw std::runtime_error("Model file has no extension!");
+	std::string ext = filePath.substr(extPos + 1);
+
+	if (ext == "obj") {
+		return std::make_shared<OBJImporter>();
+	}
+	else if (ext == "ply") {
+		return std::make_shared<PLYImporter>();
+	}
+
+	throw std::runtime_error("Unsupported model format: " + ext);
+}
 
 std::vector<VkVertexInputBindingDescription> ShaderModel::Vertex::getBindingDescription() {
 	std::uint32_t initial = 1u;
@@ -43,60 +205,11 @@ std::vector<VkVertexInputAttributeDescription> ShaderModel::Vertex::getAttribute
 }
 
 void ShaderModel::Builder::loadModel(const std::string& filePath) {
-	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-	std::string warn, err;
+	std::shared_ptr<Importer> importer = make_importer(filePath);
+	auto [vertices, indices] = importer->loadObject(filePath);
 
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
-		throw std::runtime_error(warn + err);
-	}
-
-	this->vertices.clear();
-	this->indices.clear();
-
-	std::unordered_map<Vertex, std::uint32_t> uniqueVertices{};
-	for (const auto& shape : shapes) {
-		for (const auto& index : shape.mesh.indices) {
-			Vertex vertex{};
-
-			if (index.vertex_index >= 0) {
-				vertex.position = {
-					attrib.vertices[3 * index.vertex_index + 0],
-					attrib.vertices[3 * index.vertex_index + 1],
-					attrib.vertices[3 * index.vertex_index + 2],
-				};
-
-				vertex.color = {
-					attrib.colors[3 * index.vertex_index + 0],
-					attrib.colors[3 * index.vertex_index + 1],
-					attrib.colors[3 * index.vertex_index + 2],
-				};
-			}
-
-			if (index.normal_index >= 0) {
-				vertex.normal = {
-					attrib.normals[3 * index.normal_index + 0],
-					attrib.normals[3 * index.normal_index + 1],
-					attrib.normals[3 * index.normal_index + 2],
-				};
-			}
-
-			if (index.texcoord_index >= 0) {
-				vertex.uv = {
-					attrib.texcoords[2 * index.texcoord_index + 0],
-					attrib.texcoords[2 * index.texcoord_index + 1],
-				};
-			}
-
-			if (uniqueVertices.count(vertex) == 0) {
-				uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
-				this->vertices.push_back(vertex);
-			}
-
-			indices.push_back(uniqueVertices[vertex]);
-		}
-	}
+	this->vertices = vertices;
+	this->indices = indices;
 }
 
 ShaderModel::ShaderModel(EngineDevice& device, const ShaderModel::Builder& builder)

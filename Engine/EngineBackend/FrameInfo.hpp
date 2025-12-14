@@ -30,7 +30,7 @@ struct FrameInfo {
 	std::int32_t frameIndex;
 	float frameTime;
 	VkCommandBuffer commandBuffer;
-	Camera& camera;
+	//Camera& camera;
 	VkDescriptorSet globalDescriptorSet;
 	ObjectMap& gameObjects;
 };

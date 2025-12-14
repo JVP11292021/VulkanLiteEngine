@@ -4,7 +4,9 @@
 
 VLE_NS_B
 
+// *******************************************************************
 // *************** Descriptor Set Layout Builder *********************
+// *******************************************************************
 
 DescriptorSetLayout::Builder& DescriptorSetLayout::Builder::addBinding(
     std::uint32_t binding,
@@ -26,7 +28,9 @@ std::unique_ptr<DescriptorSetLayout> DescriptorSetLayout::Builder::build() const
     return std::make_unique<DescriptorSetLayout>(this->_device, this->_bindings);
 }
 
+// ***********************************************************
 // *************** Descriptor Set Layout *********************
+// ***********************************************************
 
 DescriptorSetLayout::DescriptorSetLayout(
     EngineDevice& device, 
@@ -53,7 +57,10 @@ DescriptorSetLayout::~DescriptorSetLayout() {
     vkDestroyDescriptorSetLayout(this->_device.device(), this->_descriptorSetLayout, nullptr);
 }
 
+// *************************************************************
 // *************** Descriptor Pool Builder *********************
+// *************************************************************
+
 
 DescriptorPool::Builder& DescriptorPool::Builder::addPoolSize(
     VkDescriptorType descriptorType, std::uint32_t count
