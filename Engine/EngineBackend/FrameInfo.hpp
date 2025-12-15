@@ -33,6 +33,7 @@ struct FrameInfo {
 	//Camera& camera;
 	VkDescriptorSet globalDescriptorSet;
 	ObjectMap& gameObjects;
+	ObjectMap& pointCloud;
 };
 
 VLE_NS_E
