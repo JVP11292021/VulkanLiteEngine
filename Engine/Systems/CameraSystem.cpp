@@ -15,11 +15,12 @@ CameraSystem::CameraSystem(const glm::vec3& position,
 )
     : position_(position),
     origin_(position),
-    world_up_(world_up),
+    world_up_(glm::vec3(0.0f, 1.0f, 0.0f)),
     yaw_(yaw),
     pitch_(pitch),
     front_(glm::vec3(1.0f, 0.0f, 0.0f)),
-    movement_speed_(kSpeed),
+    movement_speed_(8.5f),
+	rotation_speed_(100.0f),
     mouse_sensitivity_(kSensitivity),
     zoom_(kZoom)
 {
@@ -69,6 +70,28 @@ void CameraSystem::processKeyboard(CameraSystemMovement CameraSystem_movement, f
     }
     else if (CameraSystem_movement == RIGHT) {
         position_ += right_ * delta;
+    }
+    else if (CameraSystem_movement == MOVE_UP) {
+        position_ += world_up_ * delta;
+	}
+    else if (CameraSystem_movement == MOVE_DOWN) {
+		position_ -= world_up_ * delta;
+    }
+    else if (CameraSystem_movement == ROTATE_LEFT) {
+        yaw_ += rotation_speed_ * delta_time;
+        this->updateCameraVectors();
+    }
+    else if (CameraSystem_movement == ROTATE_RIGHT) {
+        yaw_ -= rotation_speed_ * delta_time;
+        this->updateCameraVectors();
+    }
+    else if (CameraSystem_movement == ROTATE_UP) {
+        pitch_ -= rotation_speed_ * delta_time;
+        this->updateCameraVectors();
+    }
+    else if (CameraSystem_movement == ROTATE_DOWN) {
+        pitch_ += rotation_speed_ * delta_time;
+        this->updateCameraVectors();
     }
     else if (CameraSystem_movement == MOVE_ORIGIN) {
         position_ = origin_;

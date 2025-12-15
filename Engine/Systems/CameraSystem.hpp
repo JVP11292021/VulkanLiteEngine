@@ -14,8 +14,15 @@ enum CameraSystemMovement
     LEFT,
     RIGHT,
 
+	ROTATE_LEFT,
+	ROTATE_RIGHT,
+	ROTATE_UP,
+	ROTATE_DOWN,
+
     MOVE_ORIGIN,
     MOVE_TOP,
+    MOVE_UP,
+	MOVE_DOWN,
     MOVE_SIDEWAYS_RIGHT,
     MOVE_SIDEWAYS_LEFT
 };
@@ -70,9 +77,9 @@ public:
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjMatrix() const;
     float getZoom() const;
-    inline glm::vec3 getPosition() { return position_; };
-    inline float getRotationPitch() { return pitch_; };
-    inline float getRotationYaw() { return yaw_; };
+    inline glm::vec3 getPosition() const { return position_; };
+    inline float getRotationPitch() const { return pitch_; };
+    inline float getRotationYaw() const { return yaw_; };
 
     void setDirection(const glm::vec3& direction_to);
     void setPosition(const glm::vec3& position);
@@ -131,6 +138,7 @@ private:
     float pitch_;
 
     float movement_speed_;
+	float rotation_speed_;
     float mouse_sensitivity_;
 
     glm::vec3 origin_;
