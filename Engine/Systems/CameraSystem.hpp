@@ -78,8 +78,8 @@ public:
     glm::mat4 getProjMatrix() const;
     float getZoom() const;
     inline glm::vec3 getPosition() const { return position_; };
-    inline float getRotationPitch() const { return pitch_; };
-    inline float getRotationYaw() const { return yaw_; };
+    inline float getRotationPitch() const { return yaw_; };
+    inline float getRotationYaw() const { return pitch_; };
 
     void setDirection(const glm::vec3& direction_to);
     void setPosition(const glm::vec3& position);
@@ -134,8 +134,8 @@ private:
     glm::vec3 right_;
     glm::vec3 world_up_;
 
-    float yaw_;
     float pitch_;
+    float yaw_;
 
     float movement_speed_;
 	float rotation_speed_;

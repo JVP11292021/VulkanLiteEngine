@@ -10,14 +10,14 @@ VLE_SYS_NS_B
 
 CameraSystem::CameraSystem(const glm::vec3& position,
     const glm::vec3& world_up,
-    float yaw,
-    float pitch
+    float pitch,
+    float yaw
 )
     : position_(position),
     origin_(position),
     world_up_(glm::vec3(0.0f, 1.0f, 0.0f)),
-    yaw_(yaw),
     pitch_(pitch),
+    yaw_(yaw),
     front_(glm::vec3(1.0f, 0.0f, 0.0f)),
     movement_speed_(8.5f),
 	rotation_speed_(100.0f),
@@ -57,68 +57,54 @@ float CameraSystem::getZoom() const {
     return zoom_;
 }
 
-void CameraSystem::processKeyboard(CameraSystemMovement CameraSystem_movement, float delta_time) {
-    float delta = movement_speed_ * delta_time;
-    if (CameraSystem_movement == FORWARD) {
-        position_ += front_ * delta;
-    }
-    else if (CameraSystem_movement == BACKWARD) {
-        position_ -= front_ * delta;
-    }
-    else if (CameraSystem_movement == LEFT) {
-        position_ -= right_ * delta;
-    }
-    else if (CameraSystem_movement == RIGHT) {
-        position_ += right_ * delta;
-    }
-    else if (CameraSystem_movement == MOVE_UP) {
-        position_ += world_up_ * delta;
-	}
-    else if (CameraSystem_movement == MOVE_DOWN) {
-		position_ -= world_up_ * delta;
-    }
-    else if (CameraSystem_movement == ROTATE_LEFT) {
-        yaw_ += rotation_speed_ * delta_time;
-        this->updateCameraVectors();
-    }
-    else if (CameraSystem_movement == ROTATE_RIGHT) {
-        yaw_ -= rotation_speed_ * delta_time;
-        this->updateCameraVectors();
-    }
-    else if (CameraSystem_movement == ROTATE_UP) {
-        pitch_ -= rotation_speed_ * delta_time;
-        this->updateCameraVectors();
-    }
-    else if (CameraSystem_movement == ROTATE_DOWN) {
-        pitch_ += rotation_speed_ * delta_time;
-        this->updateCameraVectors();
-    }
-    else if (CameraSystem_movement == MOVE_ORIGIN) {
+void CameraSystem::processKeyboard(CameraSystemMovement move, float dt)
+{
+    float move_delta = movement_speed_ * dt;
+    float rot_delta  = rotation_speed_ * dt;
+    bool rotated = false;
+
+    switch (move) {
+    case FORWARD:  position_ += front_ * move_delta; break;
+    case BACKWARD: position_ -= front_ * move_delta; break;
+    case LEFT:     position_ -= right_ * move_delta; break;
+    case RIGHT:    position_ += right_ * move_delta; break;
+    case MOVE_UP:  position_ += world_up_ * move_delta; break;
+    case MOVE_DOWN:position_ -= world_up_ * move_delta; break;
+
+    case ROTATE_UP:    pitch_ -= rot_delta; rotated = true; break;
+    case ROTATE_DOWN:  pitch_ += rot_delta; rotated = true; break;
+    case ROTATE_LEFT:  yaw_ -= rot_delta; rotated = true; break;
+    case ROTATE_RIGHT: yaw_ += rot_delta; rotated = true; break;
+
+
+    case MOVE_ORIGIN:
         position_ = origin_;
-    }
-    else if (CameraSystem_movement == MOVE_TOP) {
+        break;
+
+    case MOVE_TOP:
         position_ = glm::vec3(0.0f, 0.0f, 15.0f) * scale_;
-        this->setDirection(glm::vec3(0.0f) * scale_);
-        this->updateCameraVectors();
-    }
-    else if (CameraSystem_movement == MOVE_SIDEWAYS_RIGHT) {
+        setDirection(glm::vec3(0.0f));
+        break;
+
+    case MOVE_SIDEWAYS_RIGHT:
         position_ = glm::vec3(-5.0f, -5.0f, 5.0f) * scale_;
-        this->setDirection(glm::vec3(0.0f) * scale_);
-        this->updateCameraVectors();
-    }
-    else if (CameraSystem_movement == MOVE_SIDEWAYS_LEFT) {
+        setDirection(glm::vec3(0.0f));
+        break;
+
+    case MOVE_SIDEWAYS_LEFT:
         position_ = glm::vec3(-5.0f, 5.0f, 5.0f) * scale_;
-        this->setDirection(glm::vec3(0.0f) * scale_);
-        this->updateCameraVectors();
+        setDirection(glm::vec3(0.0f));
+        break;
     }
-    // std::cout << "CameraSystem: p, y = " << pitch_ << ", " << yaw_ << std::endl;
-    // std::cout << "CameraSystem: position_ = " << glm::to_string(position_) << std::endl;
+
+    if (rotated)
+        updateCameraVectors(true);
 }
 
 void CameraSystem::processMouseInput(float xoffset, float yoffset,
     bool constrain_pitch) {
-    yaw_ -= mouse_sensitivity_ * xoffset;
-    pitch_ += mouse_sensitivity_ * yoffset;
+    pitch_ -= mouse_sensitivity_ * xoffset;
+    yaw_ += mouse_sensitivity_ * yoffset;
     this->updateCameraVectors(constrain_pitch);
 }
 
@@ -135,43 +121,26 @@ void CameraSystem::processMouseScroll(float yoffset) {
 
 void CameraSystem::updateCameraVectors(bool constrain_pitch) {
     if (constrain_pitch) {
-        if (pitch_ > 89.9f) {
-            pitch_ = 89.9f;
-        }
-        else if (pitch_ < -89.9f) {
-            pitch_ = -89.9f;
-        }
+        if (pitch_ > 89.0f) pitch_ = 89.0f;
+        if (pitch_ < -89.0f) pitch_ = -89.0f;
     }
 
     glm::vec3 front;
-
-    // front.x = cos(glm::radians(pitch_)) * cos(glm::radians(yaw_));
-    // front.y = sin(glm::radians(pitch_));
-    // front.z = - cos(glm::radians(pitch_)) * sin(glm::radians(yaw_));
-    // glm::vec3 front_orig;
-
     front.x = cos(glm::radians(pitch_)) * cos(glm::radians(yaw_));
-    front.y = cos(glm::radians(pitch_)) * sin(glm::radians(yaw_));
-    front.z = sin(glm::radians(pitch_));
-
-
-
+    front.y = sin(glm::radians(pitch_));
+    front.z = cos(glm::radians(pitch_)) * sin(glm::radians(yaw_));
     front_ = glm::normalize(front);
 
     right_ = glm::normalize(glm::cross(front_, world_up_));
     up_ = glm::normalize(glm::cross(right_, front_));
-
-    // std::cout << "CameraSystem: front_ = " << glm::to_string(front_) << std::endl;
-    // std::cout << "CameraSystem: p, y = " << pitch_ << ", " << yaw_ << std::endl;
-    // std::cout << "CameraSystem: position_ = " << glm::to_string(position_) << std::endl;
-
 }
+
 
 void CameraSystem::setDirection(const glm::vec3& direction_to) {
     glm::vec3 direction = glm::normalize(direction_to - position_);
 
-    pitch_ = glm::degrees(asin(direction.z));
-    yaw_ = glm::degrees(atan2(direction.y, direction.x));
+    yaw_ = glm::degrees(asin(direction.y));
+    pitch_ = glm::degrees(atan2(direction.z, direction.x));
     updateCameraVectors();
 }
 
@@ -186,8 +155,8 @@ void CameraSystem::setOrigin(const glm::vec3& origin) {
 
 
 void CameraSystem::setRotation(const float x_angle, const float y_angle, const float z_angle) {
-    pitch_ = glm::degrees(y_angle /* + M_PI_2 */);
-    yaw_ = glm::degrees(z_angle + M_PI_2);
+    yaw_ = glm::degrees(y_angle /* + M_PI_2 */);
+    pitch_ = glm::degrees(z_angle + M_PI_2);
     updateCameraVectors();
 
     // glm::mat4 rotation(1.0f);
@@ -196,8 +165,8 @@ void CameraSystem::setRotation(const float x_angle, const float y_angle, const f
 }
 
 void CameraSystem::setRotationPitchYaw(const float pitch_deg, const float yaw_deg) {
-    pitch_ = pitch_deg;
-    yaw_ = yaw_deg;
+    yaw_ = pitch_deg;
+    pitch_ = yaw_deg;
     updateCameraVectors();
 }
 
@@ -221,7 +190,7 @@ void CameraSystem::setIntrinsics(const CameraSystemIntrinsics& CameraSystem_intr
 }
 
 void CameraSystem::print(std::ostream& os) const {
-    std::cout << "CameraSystem: p, y = " << pitch_ << ", " << yaw_ << std::endl;
+    std::cout << "CameraSystem: p, y = " << yaw_ << ", " << pitch_ << std::endl;
     std::cout << "CameraSystem: position_ = " << glm::to_string(position_) << std::endl;
 }
 
