@@ -17,15 +17,15 @@
 
 VLE_SYS_NS_B
 
-struct SimplePushConstantData2 {
+struct PointCloudPushConstantData {
 	glm::mat4 modelMatrix{ 1.f };
 	glm::mat4 normalMatrix{ 1.f };
 };
 
-class PointCloudRenderSystem : public RenderSystem<SimplePushConstantData2>
+class PointCloudRenderSystem : public RenderSystem<PointCloudPushConstantData>
 {
 public:
-	using Base = RenderSystem<SimplePushConstantData2>;
+	using Base = RenderSystem<PointCloudPushConstantData>;
 
 	PointCloudRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 
