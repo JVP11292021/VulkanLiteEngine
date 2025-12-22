@@ -49,6 +49,8 @@ public:
 	void draw(VkCommandBuffer commandBuffer);
 
 	static std::unique_ptr<ShaderModel> createModelFromFile(EngineDevice& device, const std::string& filePath);
+	uint32_t getVertexCount() const { return this->_vertexCount; }
+	uint32_t getIndexCount() const { return this->_indexCount; }
 
 private:
 	void createVertexBuffers(const std::vector<Vertex>& vertices);

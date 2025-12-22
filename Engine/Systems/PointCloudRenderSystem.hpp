@@ -20,6 +20,7 @@ VLE_SYS_NS_B
 struct PointCloudPushConstantData {
 	glm::mat4 modelMatrix{ 1.f };
 	glm::mat4 normalMatrix{ 1.f };
+	float pointSize = 1.0f;
 };
 
 class PointCloudRenderSystem : public RenderSystem<PointCloudPushConstantData>

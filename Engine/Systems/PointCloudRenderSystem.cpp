@@ -27,6 +27,7 @@ void PointCloudRenderSystem::render(vle::FrameInfo& frameInfo) {
 		PointCloudPushConstantData push{};
 		push.modelMatrix = obj.transform.mat4();
 		push.normalMatrix = obj.transform.normalMatrix();
+		push.pointSize = 8.0f;
 		vkCmdPushConstants(frameInfo.commandBuffer, this->pipelineLayout, VLE_PUSH_CONST_VERT_FRAG_FLAG, 0, sizeof(PointCloudPushConstantData), &push);
 		obj.model->bind(frameInfo.commandBuffer);
 		obj.model->draw(frameInfo.commandBuffer);
