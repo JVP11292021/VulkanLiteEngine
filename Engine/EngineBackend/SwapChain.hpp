@@ -1,8 +1,6 @@
 #ifndef VLE_SWAPCHAIN_H
 #define VLE_SWAPCHAIN_H
 
-#include <vulkan/vulkan.h>
-
 #include <string>
 #include <vector>
 #include <memory>

@@ -7,14 +7,22 @@
 
 #include <Device.hpp>
 #include <defs.hpp>
-#include <Window.hpp>
+#include <GLFWWindow.hpp>
+#include <AndroidWindow.hpp>
 #include <SwapChain.hpp>
 
 VLE_SYS_NS_B
 
 class Renderer {
 public:
-	Renderer(vle::EngineWindow& win, vle::EngineDevice& device);
+#if VLE_WIN_WINDOWS
+	Renderer(vle::GLFWWindow& win, vle::EngineDevice& device);
+#elif VLE_WIN_ANDROID
+	Renderer(vle::AndroidWindow& win, vle::EngineDevice& device);
+#else
+	throw std::runtime_error("Unsupported platform for Renderer");
+#endif
+
 	~Renderer();
 
 	Renderer(const Renderer&) = delete;
@@ -44,7 +52,14 @@ private:
 	void recreateSwapChain();
 
 private:
-	vle::EngineWindow& win;
+#if VLE_WIN_WINDOWS
+	vle::GLFWWindow& win;
+#elif VLE_WIN_ANDROID
+	vle::AndroidWindow& win;
+#else
+	throw std::runtime_error("Unsupported platform for Renderer");
+#endif
+
 	vle::EngineDevice& device;
 	std::unique_ptr<vle::EngineSwapChain> swapChain;
 	std::vector<VkCommandBuffer> commandBuffers;

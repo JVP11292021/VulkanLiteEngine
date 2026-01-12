@@ -4,6 +4,7 @@
 #include "defs.hpp"
 #include "Window.hpp"
 #include "Object.hpp"
+#include <GLFW/glfw3.h>
 
 VLE_NS_B
 

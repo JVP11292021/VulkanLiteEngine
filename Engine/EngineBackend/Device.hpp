@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "defs.hpp"
-#include "Window.hpp"
+#include "AndroidWindow.hpp"
+#include "GLFWWindow.hpp"
 
 VLE_NS_B
 
@@ -32,7 +33,13 @@ class EngineDevice {
     const bool enableValidationLayers = true;
 #endif
 
-    EngineDevice(EngineWindow& window);
+#if VLE_WIN_WINDOWS
+    EngineDevice(GLFWWindow& window);
+#elif VLE_WIN_ANDROID
+	EngineDevice(AndroidWindow& window);
+#else
+	throw std::runtime_error("Unsupported platform for EngineDevice");
+#endif
     ~EngineDevice();
 
     // Not copyable or movable
@@ -95,7 +102,14 @@ private:
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
 private:
-    EngineWindow& _window;
+#if VLE_WIN_WINDOWS
+	GLFWWindow& _window;
+#elif VLE_WIN_ANDROID
+	AndroidWindow& _window;
+#else
+	throw std::runtime_error("Unsupported platform for EngineDevice");
+#endif
+
     VkInstance _instance;
     VkDebugUtilsMessengerEXT _debugMessenger;
     VkPhysicalDevice _physicalDevice = VK_NULL_HANDLE;

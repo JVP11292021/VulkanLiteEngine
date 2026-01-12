@@ -26,7 +26,11 @@ static void DestroyDebugUtilsMessengerEXT(
     const VkAllocationCallbacks* pAllocator);
 
 // class member functions
-EngineDevice::EngineDevice(EngineWindow& window) : _window{window} {
+#if VLE_WIN_WINDOWS
+EngineDevice::EngineDevice(GLFWWindow& window) : _window{window} {
+#else
+EngineDevice::EngineDevice(AndroidWindow& window) : _window{window} {
+#endif
     this->createInstance();
     this->setupDebugMessenger();
     this->createSurface();
@@ -34,6 +38,8 @@ EngineDevice::EngineDevice(EngineWindow& window) : _window{window} {
     this->createLogicalDevice();
     this->createCommandPool();
 }
+
+
 
 EngineDevice::~EngineDevice() {
     vkDestroyCommandPool(this->_device, this->_commandPool, nullptr);
@@ -241,16 +247,20 @@ bool EngineDevice::checkValidationLayerSupport() {
 }
 
 std::vector<const char *> EngineDevice::getRequiredExtensions() {
+#if VLE_WIN_WINDOWS
     std::uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
     std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
+#else
+    std::vector<const char*> extensions;
+    extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+    extensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+#endif
     if (enableValidationLayers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
-
     return extensions;
 }
 

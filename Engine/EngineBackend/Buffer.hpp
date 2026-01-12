@@ -11,7 +11,6 @@
 
 #include "defs.hpp"
 #include "Device.hpp"
-#include <vulkan/vulkan.h>
 
 VLE_NS_B
 
