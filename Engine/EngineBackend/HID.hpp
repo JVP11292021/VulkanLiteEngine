@@ -6,6 +6,10 @@
 #include "Object.hpp"
 #include <GLFW/glfw3.h>
 
+#if VLE_WIN_WINDOWS
+
+#include <GLFW/glfw3.h>
+
 VLE_NS_B
 
 class KeyboardMovementController {
@@ -34,5 +38,7 @@ private:
 };
 
 VLE_NS_E
+
+#endif // VLE_WIN_WINDOWS
 
 #endif // VLE_HID_H
