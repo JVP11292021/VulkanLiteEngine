@@ -5,8 +5,6 @@
 #include "Camera.hpp"
 #include "Object.hpp"
 
-#include <vulkan/vulkan.h>
-
 VLE_NS_B
 
 #define VLE_MAX_LIGHTS 10

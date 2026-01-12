@@ -1,5 +1,7 @@
 #include "HID.hpp"
 
+#if VLE_WIN_WINDOWS
+
 VLE_NS_B
 
 void KeyboardMovementController::moveInPlainXZ(GLFWwindow* window, float dt, Object& object) {
@@ -34,3 +36,5 @@ void KeyboardMovementController::moveInPlainXZ(GLFWwindow* window, float dt, Obj
 }
 
 VLE_NS_E
+
+#endif // VLE_WIN_WINDOWS

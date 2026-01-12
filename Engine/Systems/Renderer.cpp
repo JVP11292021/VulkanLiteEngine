@@ -4,7 +4,11 @@
 
 VLE_SYS_NS_B
 
-Renderer::Renderer(vle::EngineWindow& win, vle::EngineDevice& device) 
+#if VLE_WIN_WINDOWS
+Renderer::Renderer(vle::GLFWWindow& win, vle::EngineDevice& device)
+#else 
+Renderer::Renderer(vle::AndroidWindow& win, vle::EngineDevice& device)
+#endif
 	: win(win), device(device), currentImageIndex(0), currentFrameIndex(0), isFrameStarted(false)
 {
 	this->recreateSwapChain();
@@ -123,11 +127,14 @@ void Renderer::createCommandBuffers() {
 	}
 }
 
+
 void Renderer::recreateSwapChain() {
 	auto extent = this->win.getExtent();
 	while (extent.width == 0 || extent.height == 0) {
 		extent = this->win.getExtent();
+		#if VLE_WIN_WINDOWS
 		glfwWaitEvents();
+		#endif
 	}
 	vkDeviceWaitIdle(this->device.device());
 
@@ -147,5 +154,6 @@ void Renderer::recreateSwapChain() {
 	
 	}
 }
+
 
 VLE_SYS_NS_E
