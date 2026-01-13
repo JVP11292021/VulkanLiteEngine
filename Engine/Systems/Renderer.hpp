@@ -5,8 +5,8 @@
 
 #include "engdefs.hpp"
 
-#include <Device.hpp>
 #include <defs.hpp>
+#include <Device.hpp>
 #include <GLFWWindow.hpp>
 #include <AndroidWindow.hpp>
 #include <SwapChain.hpp>

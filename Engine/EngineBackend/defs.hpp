@@ -14,10 +14,6 @@
 #define VLE_NS_B namespace vle {
 #define VLE_NS_E }
 
-#ifndef VLE_PLATFORM
-#define VLE_PLATFORM            0x00000000
-#endif
-
 #ifndef VLE_PLATFORM_WINDOWS
 #define VLE_PLATFORM_WINDOWS    0x00010000
 #endif
@@ -25,11 +21,6 @@
 #ifndef VLE_PLATFORM_ANDROID
 #define VLE_PLATFORM_ANDROID    0x00020000
 #endif
-
-// TODO: Remove this line to enable platform detection
-//#ifndef VLE_FORCE_ANDROID
-//#define VLE_FORCE_ANDROID
-//#endif
 
 #if defined(VLE_FORCE_ANDROID)
 	#define VLE_ANDROID

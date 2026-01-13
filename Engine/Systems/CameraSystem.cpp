@@ -1,7 +1,9 @@
 #include "CameraSystem.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#if VLE_WIN_WINDOWS
 #include <corecrt_math_defines.h>
+#endif
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>

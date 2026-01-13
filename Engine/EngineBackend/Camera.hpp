@@ -1,5 +1,5 @@
-#ifndef VLE_ORTHO_CAMERA.H
-#define VLE_ORTHO_CAMERA
+#ifndef VLE_ORTHO_CAMERA_H
+#define VLE_ORTHO_CAMERA_H
 
 #include "defs.hpp"
 
@@ -41,4 +41,4 @@ public:
 
 VLE_NS_E
 
-#endif // VLE_ORTHO_CAMERA
+#endif // VLE_ORTHO_CAMERA_H
