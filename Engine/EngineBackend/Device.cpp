@@ -29,7 +29,7 @@ static void DestroyDebugUtilsMessengerEXT(
 #if VLE_WIN_WINDOWS
 EngineDevice::EngineDevice(GLFWWindow& window) : _window{window} {
 #else
-EngineDevice::EngineDevice(AndroidWindow& window) : _window{window} {
+EngineDevice::EngineDevice(AndroidWindow& window, AAssetManager* assetManager) : _window{window}, _assetManager{assetManager} {
 #endif
     this->createInstance();
     this->setupDebugMessenger();
@@ -99,7 +99,7 @@ void EngineDevice::pickPhysicalDevice() {
     if (deviceCount == 0) {
         throw std::runtime_error("failed to find GPUs with Vulkan support!");
     }
-    std::cout << "Device count: " << deviceCount << std::endl;
+    VLE_LOGD("Device count: ", std::to_string(deviceCount).c_str());
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(this->_instance, &deviceCount, devices.data());
 
@@ -115,7 +115,7 @@ void EngineDevice::pickPhysicalDevice() {
     }
 
     vkGetPhysicalDeviceProperties(this->_physicalDevice, &this->properties);
-    std::cout << "physical device: " << this->properties.deviceName << std::endl;
+    VLE_LOGD("physical device: ", this->properties.deviceName);
 }
 
 void EngineDevice::createLogicalDevice() {
@@ -270,17 +270,17 @@ void EngineDevice::hasGflwRequiredInstanceExtensions() {
     std::vector<VkExtensionProperties> extensions(extensionCount);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-    std::cout << "available extensions:" << std::endl;
+    VLE_LOGD("available extensions:");
     std::unordered_set<std::string> available;
     for (const auto &extension : extensions) {
-        std::cout << "\t" << extension.extensionName << std::endl;
+        VLE_LOGD("\t", extension.extensionName);
         available.insert(extension.extensionName);
     }
 
-    std::cout << "required extensions:" << std::endl;
+    VLE_LOGD("required extensions:");
     auto requiredExtensions = this->getRequiredExtensions();
     for (const auto &required : requiredExtensions) {
-        std::cout << "\t" << required << std::endl;
+        VLE_LOGD("\t", required);
         if (available.find(required) == available.end()) {
             throw std::runtime_error("Missing required glfw extension");
         }

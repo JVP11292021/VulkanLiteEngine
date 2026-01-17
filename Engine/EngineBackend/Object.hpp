@@ -8,6 +8,9 @@
 #include <map>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define VLE_ENT_NS_B VLE_NS_B namespace entity {
+#define VLE_ENT_NS_E VLE_NS_E }
+
 VLE_NS_B
 
 class Object;
@@ -69,5 +72,11 @@ private:
 };
 
 VLE_NS_E
+
+VLE_ENT_NS_B
+
+std::unique_ptr<vle::ShaderModel> Cube(vle::EngineDevice& device, glm::vec3 offset);
+
+VLE_ENT_NS_E
 
 #endif // VLE_OBJECT_H

@@ -11,7 +11,7 @@ VLE_NS_B
 
 class AndroidWindow final : public EngineWindow<ANativeWindow>{
 public:
-	AndroidWindow(std::int32_t w, std::int32_t h, std::string title);
+	AndroidWindow(ANativeWindow* win, std::int32_t w, std::int32_t h, std::string title);
 	~AndroidWindow() override;
 
 	// Window interface
@@ -29,13 +29,15 @@ public:
 		VkSurfaceKHR* surface
 	) override;
 
-	//AndroidWindow* getWindowPtr() override { return this; }
-	ANativeWindow* getNativeWindow() const { return _nativeWindow; }
+    ANativeWindow* getWindowPtr() override {
+        return _nativeWindow;
+    }
 
 	void setNativeWindow(ANativeWindow* window) {
 		_nativeWindow = window;
 		_width = ANativeWindow_getWidth(window);
 		_height = ANativeWindow_getHeight(window);
+//        _frameBufferResized = true;
 	}
 
 

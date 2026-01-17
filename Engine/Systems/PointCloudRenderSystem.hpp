@@ -28,7 +28,12 @@ class PointCloudRenderSystem : public RenderSystem<PointCloudPushConstantData>
 public:
 	using Base = RenderSystem<PointCloudPushConstantData>;
 
-	PointCloudRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+	PointCloudRenderSystem(
+            vle::EngineDevice& device,
+            VkRenderPass renderPass,
+            VkDescriptorSetLayout globalSetLayout,
+            const std::string& vertPath,
+            const std::string& fragPath);
 
 	PointCloudRenderSystem(const PointCloudRenderSystem&) = delete;
 	PointCloudRenderSystem& operator=(const PointCloudRenderSystem&) = delete;
@@ -38,7 +43,10 @@ public:
 	void render(vle::FrameInfo& frameInfo) override;
 
 private:
-	void createPipeline(VkRenderPass renderPass) override;
+	void createPipeline(
+            VkRenderPass renderPass,
+            const std::string& vertPath,
+            const std::string& fragPath) override;
 };
 
 VLE_SYS_NS_E

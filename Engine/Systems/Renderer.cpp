@@ -129,6 +129,10 @@ void Renderer::createCommandBuffers() {
 
 
 void Renderer::recreateSwapChain() {
+    if (win.getWindowPtr() == nullptr) {
+        VLE_LOGE("Unable to recreate swapchain, due to invalid window pointer");
+        return;
+    }
 	auto extent = this->win.getExtent();
 	while (extent.width == 0 || extent.height == 0) {
 		extent = this->win.getExtent();

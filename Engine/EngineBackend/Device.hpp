@@ -5,8 +5,12 @@
 #include <vector>
 
 #include "defs.hpp"
+#if VLE_WIN_ANDROID
+#include <android/asset_manager.h>
 #include "AndroidWindow.hpp"
+#elif VLE_WIN_WINDOWS
 #include "GLFWWindow.hpp"
+#endif
 
 VLE_NS_B
 
@@ -36,9 +40,9 @@ class EngineDevice {
 #if VLE_WIN_WINDOWS
     EngineDevice(GLFWWindow& window);
 #elif VLE_WIN_ANDROID
-	EngineDevice(AndroidWindow& window);
+	EngineDevice(AndroidWindow& window, AAssetManager* assetManager);
 #else
-	throw std::runtime_error("Unsupported platform for EngineDevice");
+    static_assert(false, "Unsupported platform for EngineDevice");
 #endif
     ~EngineDevice();
 
@@ -51,6 +55,9 @@ class EngineDevice {
 public:
     VkCommandPool getCommandPool() { return this->_commandPool; }
     VkDevice device() { return this->_device; }
+#if VLE_WIN_ANDROID
+    AAssetManager* assetManager() { return this->_assetManager; }
+#endif
     VkSurfaceKHR surface() { return this->_surface; }
     VkQueue graphicsQueue() { return this->_graphicsQueue; }
     VkQueue presentQueue() { return this->_presentQueue; }
@@ -106,8 +113,9 @@ private:
 	GLFWWindow& _window;
 #elif VLE_WIN_ANDROID
 	AndroidWindow& _window;
+    AAssetManager* _assetManager;
 #else
-	throw std::runtime_error("Unsupported platform for EngineDevice");
+    static_assert(false, "Unsupported platform for EngineDevice");
 #endif
 
     VkInstance _instance;

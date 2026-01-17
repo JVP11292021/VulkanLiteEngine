@@ -26,7 +26,12 @@ class ObjectRenderSystem : public RenderSystem<SimplePushConstantData> {
 public:
 	using Base = RenderSystem<SimplePushConstantData>;
 
-	ObjectRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+	ObjectRenderSystem(
+            vle::EngineDevice& device,
+            VkRenderPass renderPass,
+            VkDescriptorSetLayout globalSetLayout,
+            const std::string& vertPath,
+            const std::string& fragPath);
 
 	ObjectRenderSystem(const ObjectRenderSystem&) = delete;
 	ObjectRenderSystem& operator=(const ObjectRenderSystem&) = delete;
@@ -36,7 +41,10 @@ public:
 	void render(vle::FrameInfo& frameInfo) override;
 
 private:
-	void createPipeline(VkRenderPass renderPass) override;
+	void createPipeline(
+            VkRenderPass renderPass,
+            const std::string& vertPath,
+            const std::string& fragPath) override;
 };
 
 VLE_SYS_NS_E

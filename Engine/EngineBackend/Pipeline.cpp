@@ -95,9 +95,10 @@ void Pipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
 }
 
 std::vector<char> Pipeline::readFile(const std::string& path) {
+#if VLE_WIN_WINDOWS
 	std::ifstream file(path, std::ios::ate | std::ios::binary);
 	if (!file.is_open()) {
-		throw std::runtime_error("failed to open file: " + path);
+		throw std::runtime_error("Failed to open file: " + path);
 	}
 
 	std::size_t fileSize = static_cast<std::size_t>(file.tellg());
@@ -108,6 +109,24 @@ std::vector<char> Pipeline::readFile(const std::string& path) {
 
 	file.close();
 	return buffer;
+#elif VLE_WIN_ANDROID
+    if (!this->_device.assetManager()) {
+        throw std::runtime_error("AssetManager not set for Android Vulkan device!");
+    }
+    AAssetManager* mgr = this->_device.assetManager();
+    AAsset* asset = AAssetManager_open(mgr, path.c_str(), AASSET_MODE_STREAMING);
+    if (!asset) {
+        throw std::runtime_error("Failed to open Android asset: " + path);
+    }
+
+    size_t size = AAsset_getLength(asset);
+    std::vector<char> buffer(size);
+    AAsset_read(asset, buffer.data(), size);
+    AAsset_close(asset);
+    return buffer;
+#else
+    throw std::runtime_error("Failed to find an appropriate asset manager for the platform");
+#endif
 }
 
 

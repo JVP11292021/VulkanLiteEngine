@@ -25,7 +25,12 @@ struct PointLightPushConstant {
 class PointLightSystem : public RenderSystem<PointLightPushConstant> {
 public:
 	using Base = RenderSystem<PointLightPushConstant>;
-	PointLightSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+	PointLightSystem(
+            vle::EngineDevice& device,
+            VkRenderPass renderPass,
+            VkDescriptorSetLayout globalSetLayout,
+            const std::string& vertPath,
+            const std::string& fragPath);
 
 	PointLightSystem(const PointLightSystem&) = delete;
 	PointLightSystem& operator=(const PointLightSystem&) = delete;
@@ -35,7 +40,10 @@ public:
 	void render(vle::FrameInfo& frameInfo) override;
 
 private:
-	void createPipeline(VkRenderPass renderPass) override;
+	void createPipeline(
+            VkRenderPass renderPass,
+            const std::string& vertPath,
+            const std::string& fragPath) override;
 };
 
 VLE_SYS_NS_E

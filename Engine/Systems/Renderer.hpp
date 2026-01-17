@@ -45,11 +45,11 @@ public:
 	void endFrame();
 	void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 	void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
+	void recreateSwapChain();
 
 private:
 	void freeCommandBuffers();
 	void createCommandBuffers();
-	void recreateSwapChain();
 
 private:
 #if VLE_WIN_WINDOWS

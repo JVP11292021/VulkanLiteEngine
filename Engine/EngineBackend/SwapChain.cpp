@@ -166,13 +166,13 @@ void EngineSwapChain::createSwapChain() {
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
     if (indices.graphicsFamily != indices.presentFamily) {
-    createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    createInfo.queueFamilyIndexCount = 2;
-    createInfo.pQueueFamilyIndices = queueFamilyIndices;
+        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        createInfo.queueFamilyIndexCount = 2;
+        createInfo.pQueueFamilyIndices = queueFamilyIndices;
     } else {
-    createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.queueFamilyIndexCount = 0;      // Optional
-    createInfo.pQueueFamilyIndices = nullptr;  // Optional
+        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        createInfo.queueFamilyIndexCount = 0;      // Optional
+        createInfo.pQueueFamilyIndices = nullptr;  // Optional
     }
 
     createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
@@ -379,14 +379,14 @@ VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(
     const std::vector<VkSurfaceFormatKHR> &availableFormats
 ) {
     for (const auto& f : availableFormats) {
-        if (f.format == VK_FORMAT_B8G8R8A8_UNORM &&
+        if (f.format == VK_FORMAT_R8G8B8A8_UNORM &&
             f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             return f;
         }
     }
 
     for (const auto& f : availableFormats) {
-        if (f.format == VK_FORMAT_R8G8B8A8_UNORM &&
+        if (f.format == VK_FORMAT_B8G8R8A8_UNORM &&
             f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             return f;
         }
@@ -401,7 +401,7 @@ VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(
 #if !defined(VLE_ECONOMIC_SWAP_CHAIN_MODE)
     for (const auto &availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            std::cout << "Present mode: Mailbox" << std::endl;
+            VLE_LOGD("Present mode: Mailbox");
             return availablePresentMode;
         }
     }
@@ -409,12 +409,12 @@ VkPresentModeKHR EngineSwapChain::chooseSwapPresentMode(
 
     for (const auto &availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-            std::cout << "Present mode: Immediate" << std::endl;
+            VLE_LOGD("Present mode: Immediate");
             return availablePresentMode;
         }
     }
 
-    std::cout << "Present mode: V-Sync" << std::endl;
+    VLE_LOGD("Present mode: V-Sync");
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 

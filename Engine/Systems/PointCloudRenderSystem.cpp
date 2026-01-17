@@ -2,10 +2,16 @@
 
 VLE_SYS_NS_B
 
-PointCloudRenderSystem::PointCloudRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
+PointCloudRenderSystem::PointCloudRenderSystem(
+        vle::EngineDevice& device,
+        VkRenderPass renderPass,
+        VkDescriptorSetLayout globalSetLayout,
+        const std::string& vertPath,
+        const std::string& fragPath
+)
 	: Base(device, globalSetLayout)
 {
-	this->createPipeline(renderPass);
+	this->createPipeline(renderPass, vertPath, fragPath);
 }
 
 void PointCloudRenderSystem::update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo) {}
@@ -35,7 +41,11 @@ void PointCloudRenderSystem::render(vle::FrameInfo& frameInfo) {
 
 }
 
-void PointCloudRenderSystem::createPipeline(VkRenderPass renderPass) {
+void PointCloudRenderSystem::createPipeline(
+        VkRenderPass renderPass,
+        const std::string& vertPath,
+        const std::string& fragPath
+) {
 	assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 	vle::PipelineConfigInfo pipelineConfig{};
@@ -47,7 +57,8 @@ void PointCloudRenderSystem::createPipeline(VkRenderPass renderPass) {
 	pipelineConfig.attributeDescriptors = vle::ShaderModel::Vertex::getAttributeDescription();
 	pipelineConfig.renderPass = renderPass;
 	pipelineConfig.pipelineLayout = this->pipelineLayout;
-	this->pipeline = std::make_unique<vle::Pipeline>(device, "shaders/point_cloud_shader.vert.spv", "shaders/point_cloud_shader.frag.spv", pipelineConfig);
+	this->pipeline = std::make_unique<vle::Pipeline>(
+            device, vertPath, fragPath, pipelineConfig);
 }
 
 VLE_SYS_NS_E

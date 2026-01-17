@@ -63,7 +63,10 @@ protected:
 		}
 	}
 
-	virtual void createPipeline(VkRenderPass renderPass) = 0;
+	virtual void createPipeline(
+            VkRenderPass renderPass,
+            const std::string& vertPath,
+            const std::string& fragPath) = 0;
 	
 protected:
 	vle::EngineDevice& device;

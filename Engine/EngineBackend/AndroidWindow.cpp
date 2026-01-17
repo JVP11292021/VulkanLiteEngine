@@ -4,14 +4,13 @@
 
 VLE_NS_B
 
-AndroidWindow::AndroidWindow(std::int32_t w, std::int32_t h, std::string title)
-	: EngineWindow(w, h, title)
+AndroidWindow::AndroidWindow(ANativeWindow* win, std::int32_t w, std::int32_t h, std::string title)
+	: _nativeWindow(win), EngineWindow(w, h, title)
 {
 }
 
 AndroidWindow::~AndroidWindow() {
-	ANativeWindow_release(_nativeWindow);
-
+//	ANativeWindow_release(_nativeWindow);
 }
 
 void AndroidWindow::init() {
@@ -56,6 +55,8 @@ void AndroidWindow::createWindowSurface(
 
 	VkAndroidSurfaceCreateInfoKHR createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
 	createInfo.window = _nativeWindow;
 
 	if (vkCreateAndroidSurfaceKHR(

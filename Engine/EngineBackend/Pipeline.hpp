@@ -41,7 +41,7 @@ public:
 
 
 private:
-	static std::vector<char> readFile(const std::string& path);
+	std::vector<char> readFile(const std::string& path);
 
 	void createGfxPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo);
 	void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);

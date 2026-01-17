@@ -2,10 +2,16 @@
 
 VLE_SYS_NS_B
 
-ObjectRenderSystem::ObjectRenderSystem(vle::EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
+ObjectRenderSystem::ObjectRenderSystem(
+        vle::EngineDevice& device,
+        VkRenderPass renderPass,
+        VkDescriptorSetLayout globalSetLayout,
+        const std::string& vertPath,
+        const std::string& fragPath
+)
 	: Base(device, globalSetLayout)
 {
-	this->createPipeline(renderPass);
+	this->createPipeline(renderPass, vertPath, fragPath);
 }
 
 void ObjectRenderSystem::update(vle::FrameInfo& frameInfo, vle::GlobalUbo& ubo) {}
@@ -34,7 +40,11 @@ void ObjectRenderSystem::render(vle::FrameInfo& frameInfo) {
 
 }
 
-void ObjectRenderSystem::createPipeline(VkRenderPass renderPass) {
+void ObjectRenderSystem::createPipeline(
+        VkRenderPass renderPass,
+        const std::string& vertPath,
+        const std::string& fragPath
+) {
 	assert(this->pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 	vle::PipelineConfigInfo pipelineConfig{};
@@ -44,7 +54,8 @@ void ObjectRenderSystem::createPipeline(VkRenderPass renderPass) {
 	pipelineConfig.attributeDescriptors = vle::ShaderModel::Vertex::getAttributeDescription();
 	pipelineConfig.renderPass = renderPass;
 	pipelineConfig.pipelineLayout = this->pipelineLayout;
-	this->pipeline = std::make_unique<vle::Pipeline>(device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", pipelineConfig);
+	this->pipeline = std::make_unique<vle::Pipeline>(
+            this->device, vertPath, fragPath, pipelineConfig);
 }
 
 VLE_SYS_NS_E
