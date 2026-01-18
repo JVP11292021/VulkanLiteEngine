@@ -29,17 +29,23 @@ public:
 		VkSurfaceKHR* surface
 	) override;
 
-    ANativeWindow* getWindowPtr() override {
+public:
+    inline ANativeWindow* getWindowPtr() override {
         return _nativeWindow;
     }
 
-	void setNativeWindow(ANativeWindow* window) {
+	inline void setNativeWindow(ANativeWindow* window) {
 		_nativeWindow = window;
 		_width = ANativeWindow_getWidth(window);
 		_height = ANativeWindow_getHeight(window);
 //        _frameBufferResized = true;
 	}
 
+    inline void setSize(std::int32_t width, std::int32_t height) {
+        if (this->_width != width && this->_height != height) this->_frameBufferResized = true;
+        this->_width = width;
+        this->_height = height;
+    }
 
 private:
 	void init() override;

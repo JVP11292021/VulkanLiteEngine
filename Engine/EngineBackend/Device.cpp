@@ -27,9 +27,13 @@ static void DestroyDebugUtilsMessengerEXT(
 
 // class member functions
 #if VLE_WIN_WINDOWS
-EngineDevice::EngineDevice(GLFWWindow& window) : _window{window} {
+EngineDevice::EngineDevice(GLFWWindow& window)
+    : _window{window}
+{
 #else
-EngineDevice::EngineDevice(AndroidWindow& window, AAssetManager* assetManager) : _window{window}, _assetManager{assetManager} {
+EngineDevice::EngineDevice(AndroidWindow& window, AAssetManager* assetManager)
+    : _window{window}, _assetManager{assetManager}
+{
 #endif
     this->createInstance();
     this->setupDebugMessenger();
@@ -59,6 +63,7 @@ void EngineDevice::createInstance() {
     }
 
     VkApplicationInfo appInfo = {};
+    appInfo.pNext = nullptr;
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "Vulkan Lite Engine App";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -282,7 +287,7 @@ void EngineDevice::hasGflwRequiredInstanceExtensions() {
     for (const auto &required : requiredExtensions) {
         VLE_LOGD("\t", required);
         if (available.find(required) == available.end()) {
-            throw std::runtime_error("Missing required glfw extension");
+            throw std::runtime_error("Missing required window extension");
         }
     }
 }
@@ -538,7 +543,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData
 ) {
+#if VLE_WIN_WINDOWS
     std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+#elif VLE_WIN_ANDROID
+    VLE_LOGF("Validation layer: ", pCallbackData->pMessage);
+#endif
     return VK_FALSE;
 }
 

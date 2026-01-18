@@ -75,7 +75,7 @@ VLE_NS_E
 
 VLE_ENT_NS_B
 
-std::unique_ptr<vle::ShaderModel> Cube(vle::EngineDevice& device, glm::vec3 offset);
+std::unique_ptr<vle::ShaderModel> Cube(vle::EngineDevice& device);
 
 VLE_ENT_NS_E
 

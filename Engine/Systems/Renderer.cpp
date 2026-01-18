@@ -153,7 +153,7 @@ void Renderer::recreateSwapChain() {
 			"Swap chain image count has changed!");
 
 		if (!oldSwapChain->compareSwapFormats(*this->swapChain.get())) {
-			throw std::runtime_error("Swap chain image(or depth) format ahs changed");
+			throw std::runtime_error("Swap chain image(or depth) format has changed");
 		}
 	
 	}

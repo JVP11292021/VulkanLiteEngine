@@ -32,6 +32,7 @@ struct FrameInfo {
 	VkDescriptorSet globalDescriptorSet;
 	ObjectMap& gameObjects;
 	ObjectMap& pointCloud;
+    glm::mat4 pvmMatrix{1.f};
 };
 
 VLE_NS_E

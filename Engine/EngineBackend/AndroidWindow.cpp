@@ -7,6 +7,7 @@ VLE_NS_B
 AndroidWindow::AndroidWindow(ANativeWindow* win, std::int32_t w, std::int32_t h, std::string title)
 	: _nativeWindow(win), EngineWindow(w, h, title)
 {
+    VLE_LOGD("Created vulkan surface!");
 }
 
 AndroidWindow::~AndroidWindow() {

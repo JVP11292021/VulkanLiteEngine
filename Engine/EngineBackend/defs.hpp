@@ -78,6 +78,7 @@ inline void vle_log(android_LogPriority logPriority, Args&&... args)
 #define VLE_LOGE(...) vle_log(ANDROID_LOG_ERROR, __VA_ARGS__)
 #define VLE_LOGD(...) vle_log(ANDROID_LOG_DEBUG, __VA_ARGS__)
 #define VLE_LOGF(...) vle_log(ANDROID_LOG_FATAL, __VA_ARGS__)
+#define VLE_LOGV(...) vle_log(ANDROID_LOG_VERBOSE, __VA_ARGS__)
 
 #else
 	#include <vulkan/vulkan.h>

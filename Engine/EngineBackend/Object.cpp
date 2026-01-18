@@ -87,61 +87,61 @@ std::unique_ptr<vle::ShaderModel> MakeModel(vle::EngineDevice& device, const std
     return std::make_unique<vle::ShaderModel>(device, b);
 }
 
-std::unique_ptr<vle::ShaderModel> Cube(vle::EngineDevice& device, glm::vec3 offset) {
-    std::vector<vle::ShaderModel::Vertex> vertices{
-            // left face (white)
-            {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-            {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-            {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-            {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-            {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-            {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+std::unique_ptr<vle::ShaderModel> Cube(vle::EngineDevice& device) {
+    using V = vle::ShaderModel::Vertex;
+    std::vector<V> vertices;
+    vertices.reserve(36);
 
-            // right face (yellow)
-            {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-            {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-            {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-            {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+    auto addFace =
+            [&](glm::vec3 a, glm::vec3 b, glm::vec3 c,
+                glm::vec3 d, glm::vec3 color, glm::vec3 normal)
+            {
+                // triangle 1
+                vertices.push_back({ a, color, normal, {0.0f, 0.0f} });
+                vertices.push_back({ b, color, normal, {0.0f, 1.0f} });
+                vertices.push_back({ c, color, normal, {1.0f, 0.0f} });
 
-            // top face (orange, remember y axis points down)
-            {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-            {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-            {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-            {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-            {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-            {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+                // triangle 2
+                vertices.push_back({ c, color, normal, {1.0f, 0.0f} });
+                vertices.push_back({ b, color, normal, {0.0f, 1.0f} });
+                vertices.push_back({ d, color, normal, {1.0f, 1.0f} });
+            };
 
-            // bottom face (red)
-            {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
-            {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-            {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-            {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+    // Front (+Z) – Red
+    addFace(
+            {-1, -1,  1}, {-1,  1,  1}, { 1, -1,  1}, { 1,  1,  1},
+            {1, 0, 0}, {0, 0, 1}
+    );
 
-            // nose face (blue)
-            {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-            {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-            {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-            {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-            {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-            {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+    // Back (-Z) – Green
+    addFace(
+            {-1, -1, -1}, { 1, -1, -1}, {-1,  1, -1}, { 1,  1, -1},
+            {0, 1, 0}, {0, 0, -1}
+    );
 
-            // tail face (green)
-            {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-            {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-            {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-            {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-            {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-            {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+    // Left (-X) – Blue
+    addFace(
+            {-1, -1,  1}, {-1, -1, -1}, {-1,  1,  1}, {-1,  1, -1},
+            {0, 0, 1}, {-1, 0, 0}
+    );
 
-    };
+    // Right (+X) – Yellow
+    addFace(
+            { 1, -1,  1}, { 1,  1,  1}, { 1, -1, -1}, { 1,  1, -1},
+            {1, 1, 0}, {1, 0, 0}
+    );
 
-    for (auto& v : vertices) {
-        v.position += offset;
-    }
+    // Top (+Y) – Magenta
+    addFace(
+            {-1,  1,  1}, {-1,  1, -1}, { 1,  1,  1}, { 1,  1, -1},
+            {1, 0, 1}, {0, 1, 0}
+    );
+
+    // Bottom (-Y) – Cyan
+    addFace(
+            {-1, -1,  1}, { 1, -1,  1}, {-1, -1, -1}, { 1, -1, -1},
+            {0, 1, 1}, {0, -1, 0}
+    );
 
     return MakeModel(device, vertices);
 }
