@@ -9,6 +9,10 @@
 #include <string>
 #include <memory>
 
+#ifdef VLE_WIN_ANDROID
+#include <android/asset_manager.h>
+#endif
+
 VLE_NS_B
 
 #define VLE_PUSH_CONST_VERT_FRAG_FLAG VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
@@ -31,12 +35,17 @@ public:
 		}
 	};
 
-	struct Builder {
-		std::vector<Vertex> vertices{};
-		std::vector<std::uint32_t> indices{};
+    struct Builder {
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
 
-		void loadModel(const std::string& filePath);
-	};
+#if VLE_WIN_WINDOWS
+        void loadModel(const std::string& filePath);
+#elif VLE_WIN_ANDROID
+        void loadModel(AAssetManager* assetManager, const std::string& filePath);
+#endif
+    };
+
 public:
 	ShaderModel(EngineDevice& device, const ShaderModel::Builder& builder);
 	~ShaderModel();

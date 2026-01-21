@@ -3,6 +3,7 @@
 
 #include "engdefs.hpp"
 #include "RenderSystem.hpp"
+#include "Descriptors.hpp"
 
 #include <iostream>
 

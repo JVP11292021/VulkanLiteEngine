@@ -1,4 +1,5 @@
 #include "PointCloudRenderSystem.hpp"
+#include "Descriptors.hpp"
 
 VLE_SYS_NS_B
 

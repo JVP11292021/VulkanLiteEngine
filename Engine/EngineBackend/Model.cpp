@@ -16,6 +16,32 @@
 #include <unordered_map>
 #include <memory>
 
+#ifdef VLE_WIN_ANDROID
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+#endif // VLE_ANDROID
+
+#if VLE_WIN_ANDROID
+std::vector<char> readAssetFile(AAssetManager* assetManager, const std::string& filePath) {
+    AAsset* asset = AAssetManager_open(assetManager, filePath.c_str(), AASSET_MODE_STREAMING);
+    if (!asset) {
+        throw std::runtime_error("Failed to open asset file: " + filePath);
+    }
+
+    off_t fileSize = AAsset_getLength(asset);
+    std::vector<char> buffer(fileSize);
+
+    int bytesRead = AAsset_read(asset, buffer.data(), fileSize);
+    if (bytesRead <= 0) {
+        AAsset_close(asset);
+        throw std::runtime_error("Failed to read asset file: " + filePath);
+    }
+
+    AAsset_close(asset);
+    return buffer;
+}
+#endif
+
 namespace std {
 	template<>
 	struct hash<vle::ShaderModel::Vertex> {
@@ -28,7 +54,7 @@ namespace std {
 } // End namespace std
 
 VLE_NS_B
-
+#if VLE_WIN_WINDOWS
 class Importer {
 public:
 	using ModelPair = std::pair < std::vector<ShaderModel::Vertex>, std::vector<std::uint32_t>>;
@@ -39,6 +65,21 @@ public:
 public:
 	virtual ModelPair loadObject(const std::string& filePath) = 0;
 };
+#elifdef VLE_WIN_ANDROID
+    class Importer {
+    public:
+        using ModelPair = std::pair<std::vector<ShaderModel::Vertex>, std::vector<std::uint32_t>>;
+        virtual ~Importer() {}
+
+        virtual ModelPair loadObject(const std::string& filePath) = 0;
+
+        // Android-specific: overload that accepts an AAssetManager
+        virtual ModelPair loadObject(AAssetManager* assetManager, const std::string& filePath) {
+            // Default implementation calls the regular one for desktop-like behavior
+            return loadObject(filePath);
+        }
+    };
+#endif
 
 class OBJImporter : public Importer {
 public:
@@ -102,64 +143,86 @@ public:
 };
 
 class PLYImporter : public Importer {
-	ModelPair loadObject(const std::string& filePath) override {
-		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(filePath,
-			aiProcess_Triangulate |
-			aiProcess_GenSmoothNormals |
-			aiProcess_FlipUVs |
-			aiProcess_JoinIdenticalVertices
-		);
+public:
+#ifdef VLE_WIN_ANDROID
+        ModelPair loadObject(AAssetManager* assetManager, const std::string& filePath) {
+            auto data = readAssetFile(assetManager, filePath);
 
-		if (!scene || !scene->HasMeshes()) {
-			throw std::runtime_error("Failed to load model using Assimp: " + filePath);
-		}
+            Assimp::Importer importer;
+            const aiScene* scene = importer.ReadFileFromMemory(
+                    data.data(),
+                    data.size(),
+                    aiProcess_Triangulate |
+                    aiProcess_GenSmoothNormals |
+                    aiProcess_FlipUVs |
+                    aiProcess_JoinIdenticalVertices,
+                    "ply" // important: tells Assimp the format
+            );
 
-		std::vector<ShaderModel::Vertex> vertices;
-		std::vector<std::uint32_t> indices;
-		std::unordered_map<ShaderModel::Vertex, std::uint32_t> uniqueVertices;
+            if (!scene || !scene->HasMeshes()) {
+                throw std::runtime_error(importer.GetErrorString());
+            }
 
-		for (unsigned int m = 0; m < scene->mNumMeshes; ++m) {
-			aiMesh* mesh = scene->mMeshes[m];
+            return processScene(scene); // reuse your existing processScene function
+        }
+#endif
 
-			uint32_t vertexOffset = static_cast<uint32_t>(vertices.size());
+#ifdef VLE_WIN_WINDOWS
+        // Desktop / fallback
+        ModelPair loadObject(const std::string& filePath) override {
+            Assimp::Importer importer;
+            const aiScene* scene = importer.ReadFile(
+                    filePath,
+                    aiProcess_Triangulate |
+                    aiProcess_GenSmoothNormals |
+                    aiProcess_FlipUVs |
+                    aiProcess_JoinIdenticalVertices
+            );
 
-			// Add vertices
-			for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
-				ShaderModel::Vertex v{};
-				v.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+            if (!scene || !scene->HasMeshes()) {
+                throw std::runtime_error("Failed to load model using Assimp: " + filePath);
+            }
 
-				if (mesh->HasNormals()) {
-					v.normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-				}
+            return processScene(scene);
+        }
+#endif // VLE_WIN_WINDOWS
 
-				if (mesh->HasTextureCoords(0)) {
-					v.uv = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
-				}
+    private:
+        ModelPair processScene(const aiScene* scene) {
+            std::vector<ShaderModel::Vertex> vertices;
+            std::vector<uint32_t> indices;
 
-				if (mesh->HasVertexColors(0)) {
-					v.color = {
-						mesh->mColors[0][i].r,
-						mesh->mColors[0][i].g,
-						mesh->mColors[0][i].b
-					};
-				}
+            for (uint32_t m = 0; m < scene->mNumMeshes; ++m) {
+                aiMesh* mesh = scene->mMeshes[m];
+                uint32_t base = static_cast<uint32_t>(vertices.size());
 
-				vertices.push_back(v);
-			}
+                for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
+                    ShaderModel::Vertex v{};
+                    v.position = { mesh->mVertices[i].x,
+                                   mesh->mVertices[i].y,
+                                   mesh->mVertices[i].z };
 
-			// Add indices
-			for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
-				const aiFace& face = mesh->mFaces[f];
-				for (unsigned int j = 0; j < face.mNumIndices; ++j) {
-					indices.push_back(vertexOffset + face.mIndices[j]);
-				}
-			}
-		}
+                    if (mesh->HasNormals())
+                        v.normal = { mesh->mNormals[i].x,
+                                     mesh->mNormals[i].y,
+                                     mesh->mNormals[i].z };
 
-		return { vertices, indices };
-	}
-};
+                    if (mesh->HasVertexColors(0))
+                        v.color = { mesh->mColors[0][i].r,
+                                    mesh->mColors[0][i].g,
+                                    mesh->mColors[0][i].b };
+
+                    vertices.push_back(v);
+                }
+
+                for (uint32_t f = 0; f < mesh->mNumFaces; ++f)
+                    for (uint32_t j = 0; j < mesh->mFaces[f].mNumIndices; ++j)
+                        indices.push_back(base + mesh->mFaces[f].mIndices[j]);
+            }
+
+            return { vertices, indices };
+        }
+    };
 
 class GLTFImporter : public Importer {
 public:
@@ -264,6 +327,7 @@ std::vector<VkVertexInputAttributeDescription> ShaderModel::Vertex::getAttribute
 		.build();
 }
 
+#if VLE_WIN_WINDOWS
 void ShaderModel::Builder::loadModel(const std::string& filePath) {
 	std::shared_ptr<Importer> importer = make_importer(filePath);
 	auto [vertices, indices] = importer->loadObject(filePath);
@@ -271,6 +335,17 @@ void ShaderModel::Builder::loadModel(const std::string& filePath) {
 	this->vertices = vertices;
 	this->indices = indices;
 }
+#elif VLE_WIN_ANDROID
+    void ShaderModel::Builder::loadModel(AAssetManager* assetManager, const std::string& filePath) {
+        auto importer = make_importer(filePath);
+
+        // call the AAssetManager-aware overload
+        auto [vertices, indices] = importer->loadObject(assetManager, filePath);
+
+        this->vertices = vertices;
+        this->indices = indices;
+    }
+#endif
 
 ShaderModel::ShaderModel(EngineDevice& device, const ShaderModel::Builder& builder)
 	: _device(device)
@@ -299,11 +374,16 @@ void ShaderModel::draw(VkCommandBuffer commandBuffer) {
 		vkCmdDraw(commandBuffer, this->_vertexCount, 1, 0, 0);
 }
 
-std::unique_ptr<ShaderModel> ShaderModel::createModelFromFile(EngineDevice& device, const std::string& filePath) {
-	Builder builder{};
-	builder.loadModel(filePath);
-	return std::make_unique<ShaderModel>(device, builder);
-}
+    std::unique_ptr<ShaderModel> ShaderModel::createModelFromFile(EngineDevice& device, const std::string& filePath) {
+        Builder builder{};
+#if VLE_WIN_WINDOWS
+        builder.loadModel(filePath);
+#elif VLE_WIN_ANDROID
+        builder.loadModel(device.assetManager(), filePath); // pass the AAssetManager
+#endif
+        return std::make_unique<ShaderModel>(device, builder);
+    }
+
 
 void ShaderModel::createVertexBuffers(const std::vector<Vertex>& vertices) {
 	this->_vertexCount = static_cast<std::uint32_t>(vertices.size());
