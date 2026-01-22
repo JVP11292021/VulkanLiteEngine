@@ -83,63 +83,104 @@ public:
 
 class OBJImporter : public Importer {
 public:
-	ModelPair loadObject(const std::string& filePath) override {
-		tinyobj::attrib_t attrib;
-		std::vector<tinyobj::shape_t> shapes;
-		std::vector<tinyobj::material_t> materials;
-		std::string warn, err;
+#ifdef VLE_WIN_ANDROID
+    ModelPair loadObject(AAssetManager* assetManager, const std::string& filePath) override {
+        auto data = readAssetFile(assetManager, filePath);
 
-		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
-			throw std::runtime_error(warn + err);
-		}
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFileFromMemory(
+                data.data(),
+                data.size(),
+                aiProcess_Triangulate |
+                aiProcess_GenSmoothNormals |
+                aiProcess_FlipUVs |
+                aiProcess_JoinIdenticalVertices,
+                "obj"
+        );
 
-		std::vector<ShaderModel::Vertex> vertices;
-		std::vector<std::uint32_t> indices;
-		std::unordered_map<ShaderModel::Vertex, std::uint32_t> uniqueVertices;
+        if (!scene || !scene->HasMeshes()) {
+            throw std::runtime_error(importer.GetErrorString());
+        }
 
-		for (const auto& shape : shapes) {
-			for (const auto& index : shape.mesh.indices) {
-				ShaderModel::Vertex vertex{};
+        return processScene(scene);
+    }
+#endif
 
-				if (index.vertex_index >= 0) {
-					vertex.position = {
-						attrib.vertices[3 * index.vertex_index + 0],
-						attrib.vertices[3 * index.vertex_index + 1],
-						attrib.vertices[3 * index.vertex_index + 2],
-					};
-					vertex.color = {
-						attrib.colors[3 * index.vertex_index + 0],
-						attrib.colors[3 * index.vertex_index + 1],
-						attrib.colors[3 * index.vertex_index + 2],
-					};
-				}
+#ifdef VLE_WIN_WINDOWS
+    ModelPair loadObject(const std::string& filePath) override {
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(
+                filePath,
+                aiProcess_Triangulate |
+                aiProcess_GenSmoothNormals |
+                aiProcess_FlipUVs |
+                aiProcess_JoinIdenticalVertices
+        );
 
-				if (index.normal_index >= 0) {
-					vertex.normal = {
-						attrib.normals[3 * index.normal_index + 0],
-						attrib.normals[3 * index.normal_index + 1],
-						attrib.normals[3 * index.normal_index + 2],
-					};
-				}
+        if (!scene || !scene->HasMeshes()) {
+            throw std::runtime_error("Failed to load OBJ: " + filePath);
+        }
 
-				if (index.texcoord_index >= 0) {
-					vertex.uv = {
-						attrib.texcoords[2 * index.texcoord_index + 0],
-						attrib.texcoords[2 * index.texcoord_index + 1],
-					};
-				}
+        return processScene(scene);
+    }
+#endif
 
-				if (uniqueVertices.count(vertex) == 0) {
-					uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
-					vertices.push_back(vertex);
-				}
+private:
+    ModelPair processScene(const aiScene* scene) {
+        std::vector<ShaderModel::Vertex> vertices;
+        std::vector<uint32_t> indices;
 
-				indices.push_back(uniqueVertices[vertex]);
-			}
-		}
+        for (uint32_t m = 0; m < scene->mNumMeshes; ++m) {
+            aiMesh* mesh = scene->mMeshes[m];
+            uint32_t base = static_cast<uint32_t>(vertices.size());
 
-		return { vertices, indices };
-	}
+            for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
+                ShaderModel::Vertex v{};
+
+                v.position = {
+                        mesh->mVertices[i].x,
+                        mesh->mVertices[i].y,
+                        mesh->mVertices[i].z
+                };
+
+                if (mesh->HasNormals()) {
+                    v.normal = {
+                            mesh->mNormals[i].x,
+                            mesh->mNormals[i].y,
+                            mesh->mNormals[i].z
+                    };
+                }
+
+                if (mesh->HasVertexColors(0)) {
+                    v.color = {
+                            mesh->mColors[0][i].r,
+                            mesh->mColors[0][i].g,
+                            mesh->mColors[0][i].b
+                    };
+                } else {
+                    v.color = { 1.0f, 1.0f, 1.0f };
+                }
+
+                if (mesh->HasTextureCoords(0)) {
+                    v.uv = {
+                            mesh->mTextureCoords[0][i].x,
+                            mesh->mTextureCoords[0][i].y
+                    };
+                }
+
+                vertices.push_back(v);
+            }
+
+            for (uint32_t f = 0; f < mesh->mNumFaces; ++f) {
+                const aiFace& face = mesh->mFaces[f];
+                for (uint32_t j = 0; j < face.mNumIndices; ++j) {
+                    indices.push_back(base + face.mIndices[j]);
+                }
+            }
+        }
+
+        return { vertices, indices };
+    }
 };
 
 class PLYImporter : public Importer {
@@ -156,19 +197,18 @@ public:
                     aiProcess_GenSmoothNormals |
                     aiProcess_FlipUVs |
                     aiProcess_JoinIdenticalVertices,
-                    "ply" // important: tells Assimp the format
+                    "ply"
             );
 
             if (!scene || !scene->HasMeshes()) {
                 throw std::runtime_error(importer.GetErrorString());
             }
 
-            return processScene(scene); // reuse your existing processScene function
+            return processScene(scene);
         }
 #endif
 
 #ifdef VLE_WIN_WINDOWS
-        // Desktop / fallback
         ModelPair loadObject(const std::string& filePath) override {
             Assimp::Importer importer;
             const aiScene* scene = importer.ReadFile(
