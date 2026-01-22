@@ -172,10 +172,15 @@ void Pipeline::createGfxPipeline(const std::string& vertFilePath, const std::str
 	viewportInfo.scissorCount = 1;
 	viewportInfo.pScissors = nullptr;
 
-	VkPipelineColorBlendAttachmentState colorBlendAttachment = configInfo.colorBlendAttachment;
 	VkPipelineColorBlendStateCreateInfo colorBlendInfo = configInfo.colorBlendInfo;
 	colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlendInfo.pAttachments = &colorBlendAttachment;
+	// Support MRT: if config specifies multiple attachments, use them; otherwise use the single attachment
+	VkPipelineColorBlendAttachmentState colorBlendAttachment = configInfo.colorBlendAttachment;
+	if (configInfo.colorBlendInfo.attachmentCount <= 1) {
+		colorBlendInfo.attachmentCount = 1;
+		colorBlendInfo.pAttachments = &colorBlendAttachment;
+	}
+	// else: keep the pAttachments pointer from configInfo.colorBlendInfo for MRT
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = configInfo.assemblyInputInfo;
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	VkPipelineRasterizationStateCreateInfo rasterization = configInfo.rasterizationInfo;
