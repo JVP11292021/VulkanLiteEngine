@@ -20,6 +20,7 @@ VLE_SYS_NS_B
 struct SimplePushConstantData {
 	glm::mat4 modelMatrix{ 1.f };
 	glm::mat4 normalMatrix{ 1.f };
+	alignas(16) glm::vec3 color{ 1.f };
 };
 
 class ObjectRenderSystem : public RenderSystem<SimplePushConstantData> {
