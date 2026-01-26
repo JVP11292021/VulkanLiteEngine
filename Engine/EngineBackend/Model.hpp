@@ -19,6 +19,12 @@ VLE_NS_B
 #define VLE_PUSH_CONST_VERT_FLAG VK_SHADER_STAGE_VERTEX_BIT
 #define VLE_PUSH_CONST_FRAG_FLAG VK_SHADER_STAGE_FRAGMENT_BIT
 
+// Enum for specifying how to load model files
+enum class ModelLoadMode {
+    ASSET_MANAGER,  // Load from Android AssetManager (APK assets)
+    DIRECT_PATH     // Load from file system using direct path (external storage, absolute paths)
+};
+
 class ShaderModel {
 public:
 	struct Vertex {
@@ -40,8 +46,10 @@ public:
         std::vector<uint32_t> indices;
 
 #if VLE_WIN_WINDOWS
-        void loadModel(const std::string& filePath);
+        void loadModel(const std::string& filePath, ModelLoadMode mode = ModelLoadMode::DIRECT_PATH);
 #elif VLE_WIN_ANDROID
+        void loadModel(const std::string& filePath, ModelLoadMode mode = ModelLoadMode::ASSET_MANAGER);
+        // Android-specific: loadModel with explicit AssetManager (for backward compatibility)
         void loadModel(AAssetManager* assetManager, const std::string& filePath);
 #endif
     };
@@ -57,7 +65,15 @@ public:
 	void bind(VkCommandBuffer commandBuffer);
 	void draw(VkCommandBuffer commandBuffer);
 
-	static std::unique_ptr<ShaderModel> createModelFromFile(EngineDevice& device, const std::string& filePath);
+	static std::unique_ptr<ShaderModel> createModelFromFile(
+	    EngineDevice& device,
+	    const std::string& filePath,
+#ifdef VLE_WIN_ANDROID
+	    ModelLoadMode mode = ModelLoadMode::ASSET_MANAGER
+#else
+	    ModelLoadMode mode = ModelLoadMode::DIRECT_PATH
+#endif
+	);
 	uint32_t getVertexCount() const { return this->_vertexCount; }
 	uint32_t getIndexCount() const { return this->_indexCount; }
 
